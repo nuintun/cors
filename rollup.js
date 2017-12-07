@@ -45,14 +45,12 @@ function es3(removeArr) {
 }
 
 function build(module) {
-  module = `cors.${module}`;
-
   rollup
     .rollup({
       legacy: true,
       // plugins: [es3()],
       context: 'window',
-      input: `main/${module}.js`
+      input: `src/${module}.js`
     })
     .then(bundle => {
       const src = `dist/${module}.js`;
@@ -103,7 +101,6 @@ fs.stat('dist', error => {
     fs.mkdirSync('dist');
   }
 
-  build('all');
   build('master');
   build('worker');
 });

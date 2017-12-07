@@ -14,23 +14,15 @@
 }(this, (function () { 'use strict';
 
   /**
-   * @module master
+   * @module worker
    * @license MIT
    * @version 2017/12/07
    */
 
-  function Master() {
-    // Master
+  function Worker() {
+    // Worker
   }
 
-  /**
-   * @module cors.master
-   * @license MIT
-   * @version 2017/12/07
-   */
-
-  var cors_master = { Master: Master };
-
-  return cors_master;
+  return Worker;
 
 })));
