@@ -1,0 +1,1 @@
+{"version":3,"sources":["cors.all.js"],"names":["global","factory","exports","module","define","amd","CORS","this","Master","Worker"],"mappings":"CASC,SAAUA,EAAQC,GACE,iBAAZC,SAA0C,oBAAXC,OAAyBA,OAAOD,QAAUD,IAC9D,mBAAXG,QAAyBA,OAAOC,IAAMD,OAAO,OAAQH,GAC3DD,EAAOM,KAAOL,IAHjB,CAIEM,KAAM,WAAe,aA8BrB,OAFiBC,OApBjB,aAoBiCC,OAVjC"}
