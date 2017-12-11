@@ -4,6 +4,8 @@
  * @version 2017/12/07
  */
 
-export default function Worker() {
-  // Worker
-}
+import Messanger from './messenger/messenger';
+
+this.Messenger = Messenger;
+
+export default Messenger;

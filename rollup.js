@@ -21,34 +21,10 @@ const banner = `/**
 */
 `;
 
-// Make rollup compatible with ES3, remove Object.defineProperty of __esModule part
-function es3(removeArr) {
-  const removeHash = {
-    defineProperty: [/^\s*Object\.defineProperty\(\s*exports,\s*'__esModule'.*\n$/gm, ''],
-    freeze: [/Object.freeze\s*\(\s*([^)]*)\)/g, '$1']
-  };
-
-  if (!Array.isArray(removeArr)) removeArr = Object.keys(removeHash);
-
-  return {
-    name: 'es3',
-    transformBundle: function(code) {
-      for (let k in removeHash) {
-        if (removeArr.indexOf(k) > -1) {
-          code = code.replace(removeHash[k][0], removeHash[k][1]);
-        }
-      }
-
-      return { code, map: { mappings: '' } };
-    }
-  };
-}
-
 function build(module) {
   rollup
     .rollup({
       legacy: true,
-      // plugins: [es3()],
       context: 'window',
       input: `src/${module}.js`
     })
@@ -59,12 +35,14 @@ function build(module) {
 
       bundle
         .generate({
-          name: 'CORS',
+          name: `CORS${module.replace(/^[a-z]/, function(letter) {
+            return letter.toUpperCase();
+          })}`,
           format: 'umd',
           indent: true,
           strict: true,
           banner: banner,
-          amd: { id: 'cors' }
+          amd: { id: `cors-${module}` }
         })
         .then(result => {
           fs.writeFileSync(src, result.code);
