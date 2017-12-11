@@ -71,9 +71,6 @@
    * @param {any} value
    * @returns {boolean}
    */
-  function native(value) {
-    return typeof value === 'function' && IS_NATIVE_RE.test(value);
-  }
 
   /**
    * @module support
@@ -82,9 +79,6 @@
    */
 
   // If support MessageChannel, ignore postMessage support
-  var supportMessage = native(window.postMessage);
-  var supportIEEvent = native(window.attachEvent);
-  var supportW3CEvent = native(window.addEventListener);
 
   /**
    * @module target
