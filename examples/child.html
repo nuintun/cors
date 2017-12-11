@@ -25,12 +25,13 @@
   </div>
 
   <script>
-    var messenger = new Messenger('childWindow', 'MessengerDemo'),
-      input = document.getElementById('message');
+    var messenger = new Messenger('childWindow');
+    var input = document.getElementById('message');
 
     messenger.listen(function (msg) {
       var newline = '\n';
       var text = document.createTextNode(msg + newline);
+
       document.getElementById('output').appendChild(text);
     });
 
@@ -38,7 +39,9 @@
 
     function sendMessage(name) {
       var msg = input.value;
-      messenger.targets[name].send("message from childWindow: " + msg);
+
+      messenger.send("message from childWindow: " + msg, name);
+
       input.value = '';
     }
   </script>

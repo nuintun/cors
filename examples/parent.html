@@ -41,14 +41,15 @@
     <pre id="output" class="alert alert-warning"></pre>
   </div>
   <script>
-    var messenger = new Messenger('parent', 'MessengerDemo'),
-      iframe1 = document.getElementById('iframe1'),
-      iframe2 = document.getElementById('iframe2'),
-      input = document.getElementById('message');
+    var messenger = new Messenger('parent');
+    var iframe1 = document.getElementById('iframe1');
+    var iframe2 = document.getElementById('iframe2');
+    var input = document.getElementById('message');
 
     messenger.listen(function (msg) {
       var newline = '\n';
       var text = document.createTextNode(msg + newline);
+
       document.getElementById('output').appendChild(text);
     });
 
@@ -57,13 +58,17 @@
 
     function sendMessage(name) {
       var msg = input.value;
-      messenger.targets[name].send("message from parent: " + msg);
+
+      messenger.send("message from parent: " + msg, name);
+
       input.value = '';
     }
 
     function sendAll() {
       var msg = input.value;
+
       messenger.send("message from parent: " + msg);
+
       input.value = '';
     }
 

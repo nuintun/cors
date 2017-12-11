@@ -13,8 +13,9 @@ import { supportMessage, supportIEEvent, supportW3CEvent } from './support';
  * @constructor
  * @param {string} name
  */
-export default function Messenger(name) {
+export default function Messenger(name, namespace) {
   this.name = String(name);
+  this.namespace = arguments.length > 1 ? String(namespace) : 'Messenger';
 
   this.targets = {};
   this.listens = [];
@@ -28,6 +29,7 @@ export default function Messenger(name) {
  */
 Messenger.prototype.init = function() {
   var name = this.name;
+  var namespace = this.namespace;
   var listens = this.listens;
 
   function callback(message) {
@@ -35,8 +37,8 @@ Messenger.prototype.init = function() {
       message = message.data;
     }
 
-    if (isLegal(name, message)) {
-      message = decode(name, message);
+    if (isLegal(name, message, namespace)) {
+      message = decode(name, message, namespace);
 
       for (var i = 0, length = listens.length; i < length; i++) {
         listens[i](message);
@@ -52,7 +54,7 @@ Messenger.prototype.init = function() {
     }
   } else {
     // Compact IE6-7
-    fallback(this.name, callback);
+    fallback(name, callback, namespace);
   }
 };
 
@@ -63,7 +65,7 @@ Messenger.prototype.init = function() {
  * @param {window|iframe} target
  */
 Messenger.prototype.add = function(name, target) {
-  this.targets[name] = new Target(name, target);
+  this.targets[name] = new Target(name, target, this.namespace);
 };
 
 /**
@@ -88,12 +90,20 @@ Messenger.prototype.clear = function() {
  * @method send
  * @param {string} message
  */
-Messenger.prototype.send = function(message) {
+Messenger.prototype.send = function(message, target) {
   var targets = this.targets;
 
-  for (var name in targets) {
-    if (targets.hasOwnProperty(name)) {
-      targets[name].send(message);
+  if (arguments.length > 1) {
+    target = String(target);
+
+    if (targets.hasOwnProperty(target)) {
+      targets[target].send(message);
+    }
+  } else {
+    for (var name in targets) {
+      if (targets.hasOwnProperty(name)) {
+        targets[name].send(message);
+      }
     }
   }
 };

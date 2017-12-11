@@ -13,20 +13,22 @@ var ACK = '\x06';
  * @function encode
  * @param {string} name
  * @param {string} message
+ * @param {string} namespace
  * @returns {string}
  */
-export function encode(name, message) {
-  return SOH + name + STX + message + ETX;
+export function encode(name, message, namespace) {
+  return SOH + namespace + '-' + name + STX + message + ETX;
 }
 
 /**
  * @function decode
  * @param {string} name
  * @param {string} message
+ * @param {string} namespace
  * @returns {string}
  */
-export function decode(name, message) {
-  var prefix = SOH + name + STX;
+export function decode(name, message, namespace) {
+  var prefix = SOH + namespace + '-' + name + STX;
 
   return message.slice(prefix.length, -1);
 }
@@ -35,10 +37,11 @@ export function decode(name, message) {
  * @function isLegal
  * @param {string} name
  * @param {string} message
+ * @param {string} namespace
  * @returns {boolean}
  */
-export function isLegal(name, message) {
-  var prefix = SOH + name + STX;
+export function isLegal(name, message, namespace) {
+  var prefix = SOH + namespace + '-' + name + STX;
 
   return message.indexOf(prefix) === 0 && message.indexOf(ETX) === message.length - 1;
 }
@@ -47,10 +50,11 @@ export function isLegal(name, message) {
  * @function fallback
  * @param {string} name
  * @param {Function} callback
+ * @param {string} namespace
  * @returns {Function}
  */
-export function fallback(name, callback) {
-  name = ACK + '-Target-' + name;
+export function fallback(name, callback, namespace) {
+  name = ACK + '-' + namespace + '-' + name;
 
   if (typeof callback === 'function') {
     window.navigator[name] = callback;

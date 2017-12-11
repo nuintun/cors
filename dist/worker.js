@@ -23,6 +23,7 @@
    * @function encode
    * @param {string} name
    * @param {string} message
+   * @param {string} namespace
    * @returns {string}
    */
 
@@ -31,6 +32,7 @@
    * @function decode
    * @param {string} name
    * @param {string} message
+   * @param {string} namespace
    * @returns {string}
    */
 
@@ -39,6 +41,7 @@
    * @function isLegal
    * @param {string} name
    * @param {string} message
+   * @param {string} namespace
    * @returns {boolean}
    */
 
@@ -47,29 +50,8 @@
    * @function fallback
    * @param {string} name
    * @param {Function} callback
+   * @param {string} namespace
    * @returns {Function}
-   */
-
-  /**
-   * @module utils
-   * @license MIT
-   * @version 2017/12/07
-   */
-
-  // Used to match `RegExp`
-  // [syntax characters](http://ecma-international.org/ecma-262/7.0/#sec-patterns).
-  var REGEXP_CHAR_RE = /[\\^$.*+?()[\]{}|]/g;
-  // Used to detect if a method is native
-  var IS_NATIVE_RE = Function.prototype.toString.call(Function);
-
-  IS_NATIVE_RE = IS_NATIVE_RE.replace(REGEXP_CHAR_RE, '\\$&');
-  IS_NATIVE_RE = IS_NATIVE_RE.replace(/Function|(function).*?(?=\\\()| for .+?(?=\\\])/g, '$1.*?');
-  IS_NATIVE_RE = new RegExp('^' + IS_NATIVE_RE + '$');
-
-  /**
-   * @function native
-   * @param {any} value
-   * @returns {boolean}
    */
 
   /**
@@ -77,8 +59,6 @@
    * @license MIT
    * @version 2017/12/11
    */
-
-  // If support MessageChannel, ignore postMessage support
 
   /**
    * @module target

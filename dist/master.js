@@ -28,20 +28,22 @@
    * @function encode
    * @param {string} name
    * @param {string} message
+   * @param {string} namespace
    * @returns {string}
    */
-  function encode(name, message) {
-    return SOH + name + STX + message + ETX;
+  function encode(name, message, namespace) {
+    return SOH + namespace + '-' + name + STX + message + ETX;
   }
 
   /**
    * @function decode
    * @param {string} name
    * @param {string} message
+   * @param {string} namespace
    * @returns {string}
    */
-  function decode(name, message) {
-    var prefix = SOH + name + STX;
+  function decode(name, message, namespace) {
+    var prefix = SOH + namespace + '-' + name + STX;
 
     return message.slice(prefix.length, -1);
   }
@@ -50,10 +52,11 @@
    * @function isLegal
    * @param {string} name
    * @param {string} message
+   * @param {string} namespace
    * @returns {boolean}
    */
-  function isLegal(name, message) {
-    var prefix = SOH + name + STX;
+  function isLegal(name, message, namespace) {
+    var prefix = SOH + namespace + '-' + name + STX;
 
     return message.indexOf(prefix) === 0 && message.indexOf(ETX) === message.length - 1;
   }
@@ -62,10 +65,11 @@
    * @function fallback
    * @param {string} name
    * @param {Function} callback
+   * @param {string} namespace
    * @returns {Function}
    */
-  function fallback(name, callback) {
-    name = ACK + '-Target-' + name;
+  function fallback(name, callback, namespace) {
+    name = ACK + '-' + namespace + '-' + name;
 
     if (typeof callback === 'function') {
       window.navigator[name] = callback;
@@ -75,34 +79,11 @@
   }
 
   /**
-   * @module utils
-   * @license MIT
-   * @version 2017/12/07
-   */
-
-  // Used to match `RegExp`
-  // [syntax characters](http://ecma-international.org/ecma-262/7.0/#sec-patterns).
-  var REGEXP_CHAR_RE = /[\\^$.*+?()[\]{}|]/g;
-  // Used to detect if a method is native
-  var IS_NATIVE_RE = Function.prototype.toString.call(Function);
-
-  IS_NATIVE_RE = IS_NATIVE_RE.replace(REGEXP_CHAR_RE, '\\$&');
-  IS_NATIVE_RE = IS_NATIVE_RE.replace(/Function|(function).*?(?=\\\()| for .+?(?=\\\])/g, '$1.*?');
-  IS_NATIVE_RE = new RegExp('^' + IS_NATIVE_RE + '$');
-
-  /**
-   * @function native
-   * @param {any} value
-   * @returns {boolean}
-   */
-
-  /**
    * @module support
    * @license MIT
    * @version 2017/12/11
    */
 
-  // If support MessageChannel, ignore postMessage support
   var supportMessage = 'postMessage' in window;
   var supportIEEvent = 'attachEvent' in window;
   var supportW3CEvent = 'addEventListener' in window;
@@ -118,10 +99,12 @@
    * @constructor
    * @param {string} name
    * @param {window} target
+   * @param {string} namespace
    * @param {prefix}
    */
-  function Target(name, target) {
+  function Target(name, target, namespace) {
     this.name = String(name);
+    this.namespace = namespace;
     this.target = target;
   }
 
@@ -132,11 +115,11 @@
    */
   if (supportMessage) {
     Target.prototype.send = function(message) {
-      this.target.postMessage(encode(this.name, message), '*');
+      this.target.postMessage(encode(this.name, message, this.namespace), '*');
     };
   } else {
     Target.prototype.send = function(message) {
-      var callback = fallback(this.name);
+      var callback = fallback(this.name, this.namespace);
 
       if (typeof callback === 'function') {
         callback(encode(message), window);
@@ -157,8 +140,9 @@
    * @constructor
    * @param {string} name
    */
-  function Messenger$1(name) {
+  function Messenger$1(name, namespace) {
     this.name = String(name);
+    this.namespace = arguments.length > 1 ? String(namespace) : 'Messenger';
 
     this.targets = {};
     this.listens = [];
@@ -172,6 +156,7 @@
    */
   Messenger$1.prototype.init = function() {
     var name = this.name;
+    var namespace = this.namespace;
     var listens = this.listens;
 
     function callback(message) {
@@ -179,8 +164,8 @@
         message = message.data;
       }
 
-      if (isLegal(name, message)) {
-        message = decode(name, message);
+      if (isLegal(name, message, namespace)) {
+        message = decode(name, message, namespace);
 
         for (var i = 0, length = listens.length; i < length; i++) {
           listens[i](message);
@@ -196,7 +181,7 @@
       }
     } else {
       // Compact IE6-7
-      fallback(this.name, callback);
+      fallback(name, callback, namespace);
     }
   };
 
@@ -207,7 +192,7 @@
    * @param {window|iframe} target
    */
   Messenger$1.prototype.add = function(name, target) {
-    this.targets[name] = new Target(name, target);
+    this.targets[name] = new Target(name, target, this.namespace);
   };
 
   /**
@@ -232,12 +217,20 @@
    * @method send
    * @param {string} message
    */
-  Messenger$1.prototype.send = function(message) {
+  Messenger$1.prototype.send = function(message, target) {
     var targets = this.targets;
 
-    for (var name in targets) {
-      if (targets.hasOwnProperty(name)) {
-        targets[name].send(message);
+    if (arguments.length > 1) {
+      target = String(target);
+
+      if (targets.hasOwnProperty(target)) {
+        targets[target].send(message);
+      }
+    } else {
+      for (var name in targets) {
+        if (targets.hasOwnProperty(name)) {
+          targets[name].send(message);
+        }
       }
     }
   };

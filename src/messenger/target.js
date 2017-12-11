@@ -12,10 +12,12 @@ import { supportMessage } from './support';
  * @constructor
  * @param {string} name
  * @param {window} target
+ * @param {string} namespace
  * @param {prefix}
  */
-export default function Target(name, target) {
+export default function Target(name, target, namespace) {
   this.name = String(name);
+  this.namespace = namespace;
   this.target = target;
 }
 
@@ -26,11 +28,11 @@ export default function Target(name, target) {
  */
 if (supportMessage) {
   Target.prototype.send = function(message) {
-    this.target.postMessage(encode(this.name, message), '*');
+    this.target.postMessage(encode(this.name, message, this.namespace), '*');
   };
 } else {
   Target.prototype.send = function(message) {
-    var callback = fallback(this.name);
+    var callback = fallback(this.name, this.namespace);
 
     if (typeof callback === 'function') {
       callback(encode(message), window);
