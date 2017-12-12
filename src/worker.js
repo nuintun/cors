@@ -4,7 +4,7 @@
  * @version 2017/12/07
  */
 
-import Messanger from './messenger/messenger';
+import Messenger from './messenger/messenger';
 
 this.Messenger = Messenger;
 

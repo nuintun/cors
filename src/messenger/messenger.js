@@ -62,7 +62,7 @@ Messenger.prototype.init = function() {
  * @public
  * @method add
  * @description Add a target
- * @param {window|iframe} target
+ * @param {window} target
  */
 Messenger.prototype.add = function(name, target) {
   this.targets[name] = new Target(name, target, this.namespace);

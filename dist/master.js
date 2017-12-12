@@ -146,7 +146,7 @@
    * @constructor
    * @param {string} name
    */
-  function Messenger$1(name, namespace) {
+  function Messenger(name, namespace) {
     this.name = String(name);
     this.namespace = arguments.length > 1 ? String(namespace) : 'Messenger';
 
@@ -160,7 +160,7 @@
    * @private
    * @method init
    */
-  Messenger$1.prototype.init = function() {
+  Messenger.prototype.init = function() {
     var name = this.name;
     var namespace = this.namespace;
     var listens = this.listens;
@@ -195,9 +195,9 @@
    * @public
    * @method add
    * @description Add a target
-   * @param {window|iframe} target
+   * @param {window} target
    */
-  Messenger$1.prototype.add = function(name, target) {
+  Messenger.prototype.add = function(name, target) {
     this.targets[name] = new Target(name, target, this.namespace);
   };
 
@@ -206,7 +206,7 @@
    * @method listen
    * @param {Function} callback
    */
-  Messenger$1.prototype.listen = function(callback) {
+  Messenger.prototype.listen = function(callback) {
     this.listens.push(callback);
   };
 
@@ -214,7 +214,7 @@
    * @public
    * @method clear
    */
-  Messenger$1.prototype.clear = function() {
+  Messenger.prototype.clear = function() {
     this.listens = [];
   };
 
@@ -223,7 +223,7 @@
    * @method send
    * @param {string} message
    */
-  Messenger$1.prototype.send = function(message, target) {
+  Messenger.prototype.send = function(message, target) {
     var targets = this.targets;
 
     if (arguments.length > 1) {
@@ -247,8 +247,41 @@
    * @version 2017/12/07
    */
 
-  window.Messenger = Messenger$1;
+  function Master(url) {
+    this['<ready>'] = false;
+    this.messenger = this.proxy(url);
+  }
 
-  return Messenger$1;
+  Master.prototype = {
+    ready: function(callback) {},
+    proxy: function(url) {
+      var iframe = document.createElement('iframe');
+
+      iframe.setAttribute('width', '0');
+      iframe.setAttribute('height', '0');
+      iframe.setAttribute('frameborder', '0');
+      iframe.setAttribute('marginwidth', '0');
+      iframe.setAttribute('marginheight', '0');
+
+      iframe.src = url;
+
+      document.documentElement.appendChild(iframe);
+
+      var messenger = new Messenger('master');
+
+      messenger.add('worker', iframe.contentWindow);
+
+      messenger.listen(function(message) {
+        console.log(message);
+
+        messenger.send('Master received', 'worker');
+      });
+
+      return messenger;
+    },
+    request: function(options) {}
+  };
+
+  return Master;
 
 })));
