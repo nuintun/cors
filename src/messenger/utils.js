@@ -10,6 +10,16 @@ var ETX = '\x03';
 var ACK = '\x06';
 
 /**
+ * @function prefix
+ * @param {string} name
+ * @param {string} namespace
+ * @returns {string}
+ */
+function prefix(name, namespace) {
+  return SOH + namespace + '-' + name + STX;
+}
+
+/**
  * @function encode
  * @param {string} name
  * @param {string} message
@@ -17,7 +27,7 @@ var ACK = '\x06';
  * @returns {string}
  */
 export function encode(name, message, namespace) {
-  return SOH + namespace + '-' + name + STX + message + ETX;
+  return prefix(name, namespace) + message + ETX;
 }
 
 /**
@@ -28,9 +38,7 @@ export function encode(name, message, namespace) {
  * @returns {string}
  */
 export function decode(name, message, namespace) {
-  var prefix = SOH + namespace + '-' + name + STX;
-
-  return message.slice(prefix.length, -1);
+  return message.slice(prefix(name, namespace).length, -1);
 }
 
 /**
@@ -41,9 +49,7 @@ export function decode(name, message, namespace) {
  * @returns {boolean}
  */
 export function isLegal(name, message, namespace) {
-  var prefix = SOH + namespace + '-' + name + STX;
-
-  return message.indexOf(prefix) === 0 && message.indexOf(ETX) === message.length - 1;
+  return message.indexOf(prefix(name, namespace)) === 0 && message.lastIndexOf(ETX) === message.length - 1;
 }
 
 /**
