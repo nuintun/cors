@@ -26,9 +26,18 @@
   }
 
   /**
-   * @module master
+   * @module support
    * @license MIT
-   * @version 2017/12/07
+   * @version 2017/12/13
+   */
+
+  var supportIEEvent = 'attachEvent' in window;
+  var supportW3CEvent = 'addEventListener' in window;
+
+  /**
+   * @module dom-ready
+   * @license MIT
+   * @version 2017/12/13
    * @see https://github.com/jakobmattsson/onDomReady
    */
 
@@ -42,7 +51,7 @@
     if (!document.body) {
       clearTimeout(readyTimer);
 
-      return (readyTimer = setTimeout(whenReady));
+      return (readyTimer = setTimeout(whenReady, 1));
     }
 
     for (var i = 0; i < readyList.length; i++) {
@@ -67,7 +76,7 @@
   }
 
   function doScrollCheck() {
-    // stop searching if we have no functions to call
+    // Stop searching if we have no functions to call
     // (or, in other words, if they have already been called)
     if (readyList.length > 0) {
       try {
@@ -78,18 +87,18 @@
         return setTimeout(doScrollCheck, 1);
       }
 
-      // and execute any waiting functions
+      // And execute any waiting functions
       whenReady();
     }
   }
 
   function bindReady() {
     // Mozilla, Opera and webkit nightlies currently support this event
-    if (document.addEventListener) {
+    if (supportW3CEvent) {
       document.addEventListener('DOMContentLoaded', DOMContentLoaded, false);
       window.addEventListener('load', whenReady, false); // fallback
       // If IE event model is used
-    } else if (document.attachEvent) {
+    } else if (supportIEEvent) {
       document.attachEvent('onreadystatechange', onreadystatechange);
       window.attachEvent('onload', whenReady); // fallback
 
@@ -202,8 +211,6 @@
    */
 
   var supportMessage = 'postMessage' in window;
-  var supportIEEvent = 'attachEvent' in window;
-  var supportW3CEvent = 'addEventListener' in window;
 
   /**
    * @module target

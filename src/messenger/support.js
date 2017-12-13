@@ -5,5 +5,3 @@
  */
 
 export var supportMessage = 'postMessage' in this;
-export var supportIEEvent = 'attachEvent' in this;
-export var supportW3CEvent = 'addEventListener' in this;

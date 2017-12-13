@@ -97,8 +97,6 @@
    */
 
   var supportMessage = 'postMessage' in window;
-  var supportIEEvent = 'attachEvent' in window;
-  var supportW3CEvent = 'addEventListener' in window;
 
   /**
    * @module target
@@ -140,6 +138,15 @@
       }
     };
   }
+
+  /**
+   * @module support
+   * @license MIT
+   * @version 2017/12/13
+   */
+
+  var supportIEEvent = 'attachEvent' in window;
+  var supportW3CEvent = 'addEventListener' in window;
 
   /**
    * @module messenger

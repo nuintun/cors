@@ -5,8 +5,9 @@
  */
 
 import Target from './target';
+import { supportMessage } from './support';
 import { decode, isLegal, fallback } from './utils';
-import { supportMessage, supportIEEvent, supportW3CEvent } from './support';
+import { supportIEEvent, supportW3CEvent } from '../support';
 
 /**
  * @class Messenger
