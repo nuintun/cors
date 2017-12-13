@@ -19,6 +19,33 @@
    * @version 2017/12/07
    */
 
+
+
+
+
+  var DOMAIN_RE = /^([a-z0-9.+-]+:)?\/\/(?:[^/:]*(?::[^/]*)?@)?([^/]+)/i;
+
+  function domain(url) {
+    var matched = DOMAIN_RE.exec(url);
+
+    if (matched === null) {
+      url = location.protocol + '//' + location.hostname + location.port;
+    } else {
+      var protocol = matched[1];
+      var domain = matched[2];
+
+      url = (protocol || location.protocol) + '//' + domain;
+
+      if (protocol === 'http') {
+        url = url.replace(/:80$/, '');
+      } else if (protocol === 'https') {
+        url = url.replace(/:443$/, '');
+      }
+    }
+
+    return url;
+  }
+
   /**
    * @module utils
    * @license MIT
@@ -112,10 +139,11 @@
    * @param {string} namespace
    * @param {prefix}
    */
-  function Target(name, target, namespace) {
+  function Target(name, target, origin, namespace) {
     this.name = String(name);
-    this.namespace = namespace;
     this.target = target;
+    this.origin = domain(origin);
+    this.namespace = namespace;
   }
 
   /**
@@ -124,17 +152,21 @@
    * @param {string} message
    */
   if (supportMessage) {
-    Target.prototype.send = function(message) {
-      this.target.postMessage(encode(this.name, message, this.namespace), '*');
+    Target.prototype.send = function(message, origin) {
+      console.log(origin, '------', this.origin);
+
+      this.target.postMessage(encode(this.name, message, this.namespace), origin);
     };
   } else {
-    Target.prototype.send = function(message) {
-      var callback = fallback(this.name, this.namespace);
+    Target.prototype.send = function(message, origin) {
+      if (origin === '*' || origin === this.origin) {
+        var callback = fallback(this.name, this.namespace);
 
-      if (typeof callback === 'function') {
-        callback(encode(message), window);
-      } else {
-        throw new Error('Target callback function is not defined');
+        if (typeof callback === 'function') {
+          callback({ origin: this.origin, data: encode(message) });
+        } else {
+          throw new Error('Target callback function is not defined');
+        }
       }
     };
   }
@@ -178,16 +210,16 @@
     var namespace = this.namespace;
     var listens = this.listens;
 
-    function callback(message) {
-      if (typeof message === 'object' && message.data) {
-        message = message.data;
-      }
+    function callback(event) {
+      var message = event.data;
 
       if (isLegal(name, message, namespace)) {
+        var origin = event.origin;
+
         message = decode(name, message, namespace);
 
         for (var i = 0, length = listens.length; i < length; i++) {
-          listens[i](message);
+          listens[i](message, origin);
         }
       }
     }
@@ -210,8 +242,8 @@
    * @description Add a target
    * @param {window} target
    */
-  Messenger.prototype.add = function(name, target) {
-    this.targets[name] = new Target(name, target, this.namespace);
+  Messenger.prototype.add = function(name, target, origin) {
+    this.targets[name] = new Target(name, target, origin, this.namespace);
   };
 
   /**
@@ -236,19 +268,19 @@
    * @method send
    * @param {string} message
    */
-  Messenger.prototype.send = function(message, target) {
+  Messenger.prototype.send = function(message, target, origin) {
     var targets = this.targets;
 
     if (arguments.length > 1) {
       target = String(target);
 
       if (targets.hasOwnProperty(target)) {
-        targets[target].send(message);
+        targets[target].send(message, origin);
       }
     } else {
       for (var name in targets) {
         if (targets.hasOwnProperty(name)) {
-          targets[name].send(message);
+          targets[name].send(message, origin);
         }
       }
     }
@@ -263,10 +295,10 @@
   function Worker() {
     var worker = new Messenger('Worker');
 
-    worker.add('Master', window.parent);
+    worker.add('Master', window.parent, document.referrer);
 
-    worker.listen(function(response) {
-      response = JSON.parse(response);
+    worker.listen(function(message, origin) {
+      var data = JSON.parse(message);
 
       var xhr = new XMLHttpRequest();
 
@@ -275,19 +307,20 @@
           worker.send(
             JSON.stringify({
               valid: true,
-              uid: response.uid,
+              uid: data.uid,
               data: xhr.responseText
             }),
-            'Master'
+            'Master',
+            origin
           );
         }
       };
 
-      xhr.open('GET', response.url);
+      xhr.open('GET', data.url);
       xhr.send();
     });
 
-    worker.send('ready', 'Master');
+    worker.send('ready', 'Master', domain(document.referrer));
   }
 
   return Worker;

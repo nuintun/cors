@@ -22,3 +22,26 @@ export function typeOf(value) {
     .slice(8, -1)
     .toLowerCase();
 }
+
+var DOMAIN_RE = /^([a-z0-9.+-]+:)?\/\/(?:[^/:]*(?::[^/]*)?@)?([^/]+)/i;
+
+export function domain(url) {
+  var matched = DOMAIN_RE.exec(url);
+
+  if (matched === null) {
+    url = location.protocol + '//' + location.hostname + location.port;
+  } else {
+    var protocol = matched[1];
+    var domain = matched[2];
+
+    url = (protocol || location.protocol) + '//' + domain;
+
+    if (protocol === 'http') {
+      url = url.replace(/:80$/, '');
+    } else if (protocol === 'https') {
+      url = url.replace(/:443$/, '');
+    }
+  }
+
+  return url;
+}

@@ -4,15 +4,16 @@
  * @version 2017/12/07
  */
 
+import { domain } from './utils';
 import Messenger from './messenger/messenger';
 
 export default function Worker() {
   var worker = new Messenger('Worker');
 
-  worker.add('Master', window.parent);
+  worker.add('Master', window.parent, document.referrer);
 
-  worker.listen(function(response) {
-    response = JSON.parse(response);
+  worker.listen(function(message, origin) {
+    var data = JSON.parse(message);
 
     var xhr = new XMLHttpRequest();
 
@@ -21,17 +22,18 @@ export default function Worker() {
         worker.send(
           JSON.stringify({
             valid: true,
-            uid: response.uid,
+            uid: data.uid,
             data: xhr.responseText
           }),
-          'Master'
+          'Master',
+          origin
         );
       }
     };
 
-    xhr.open('GET', response.url);
+    xhr.open('GET', data.url);
     xhr.send();
   });
 
-  worker.send('ready', 'Master');
+  worker.send('ready', 'Master', domain(document.referrer));
 }

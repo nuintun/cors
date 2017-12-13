@@ -4,12 +4,13 @@
  * @version 2017/12/07
  */
 
-import { uid } from './utils';
 import domReady from './dom-ready';
+import { uid, domain } from './utils';
 import Messenger from './messenger/messenger';
 
 export default function Master(url) {
   this['<ready>'] = false;
+  this['<origin>'] = domain(url);
   this['<callbacks>'] = { ready: [] };
   this['<messenger>'] = this['<proxy>'](url);
 }
@@ -42,10 +43,10 @@ Master.prototype = {
     domReady(function() {
       document.body.appendChild(iframe);
 
-      messenger.add('Worker', iframe.contentWindow);
+      messenger.add('Worker', iframe.contentWindow, iframe.src);
 
-      messenger.listen(function(response) {
-        if (response === 'ready') {
+      messenger.listen(function(message, origin) {
+        if (message === 'ready') {
           if (!self['<ready>']) {
             self['<ready>'] = true;
 
@@ -59,18 +60,20 @@ Master.prototype = {
           }
         } else {
           try {
-            response = JSON.parse(response);
+            var data = JSON.parse(message);
           } catch (error) {
             // Unknow error
-            return console && console.error && console.error(response);
+            return console && console.error && console.error(message);
           }
 
-          var id = response.uid;
+          if (data) {
+            var id = data.uid;
 
-          if (callbacks[id]) {
-            callbacks[id](response);
+            if (callbacks[id]) {
+              callbacks[id](data);
 
-            delete callbacks[id];
+              delete callbacks[id];
+            }
           }
         }
       });
@@ -80,8 +83,9 @@ Master.prototype = {
   },
   request: function(url, options) {
     var self = this;
-    var callbacks = this['<callbacks>'];
-    var messenger = this['<messenger>'];
+    var origin = self['<origin>'];
+    var callbacks = self['<callbacks>'];
+    var messenger = self['<messenger>'];
 
     return new Promise(function(resolve, reject) {
       var id = uid();
@@ -101,7 +105,8 @@ Master.prototype = {
             url: url,
             options: options
           }),
-          'Worker'
+          'Worker',
+          origin
         );
       });
     });

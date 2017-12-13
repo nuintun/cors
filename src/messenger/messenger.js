@@ -33,16 +33,16 @@ Messenger.prototype.init = function() {
   var namespace = this.namespace;
   var listens = this.listens;
 
-  function callback(message) {
-    if (typeof message === 'object' && message.data) {
-      message = message.data;
-    }
+  function callback(event) {
+    var message = event.data;
 
     if (isLegal(name, message, namespace)) {
+      var origin = event.origin;
+
       message = decode(name, message, namespace);
 
       for (var i = 0, length = listens.length; i < length; i++) {
-        listens[i](message);
+        listens[i](message, origin);
       }
     }
   }
@@ -65,8 +65,8 @@ Messenger.prototype.init = function() {
  * @description Add a target
  * @param {window} target
  */
-Messenger.prototype.add = function(name, target) {
-  this.targets[name] = new Target(name, target, this.namespace);
+Messenger.prototype.add = function(name, target, origin) {
+  this.targets[name] = new Target(name, target, origin, this.namespace);
 };
 
 /**
@@ -91,19 +91,19 @@ Messenger.prototype.clear = function() {
  * @method send
  * @param {string} message
  */
-Messenger.prototype.send = function(message, target) {
+Messenger.prototype.send = function(message, target, origin) {
   var targets = this.targets;
 
   if (arguments.length > 1) {
     target = String(target);
 
     if (targets.hasOwnProperty(target)) {
-      targets[target].send(message);
+      targets[target].send(message, origin);
     }
   } else {
     for (var name in targets) {
       if (targets.hasOwnProperty(name)) {
-        targets[name].send(message);
+        targets[name].send(message, origin);
       }
     }
   }
