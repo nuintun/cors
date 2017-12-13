@@ -14,11 +14,14 @@
 
 <body>
   <script>
+    console.time('cors');
+
     var cors = new CORSMaster('//127.0.0.1:8080/examples/api.html');
 
     cors.request('//127.0.0.1:8080/package.json')
       .then(function (response) {
         console.log(response);
+        console.timeEnd('cors');
       });
   </script>
 </body>
