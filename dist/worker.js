@@ -268,14 +268,23 @@
     worker.listen(function(response) {
       response = JSON.parse(response);
 
-      worker.send(
-        JSON.stringify({
-          valid: true,
-          uid: response.uid,
-          data: { username: 'nuintun' }
-        }),
-        'Master'
-      );
+      var xhr = new XMLHttpRequest();
+
+      xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4) {
+          worker.send(
+            JSON.stringify({
+              valid: true,
+              uid: response.uid,
+              data: xhr.responseText
+            }),
+            'Master'
+          );
+        }
+      };
+
+      xhr.open('GET', response.url);
+      xhr.send();
     });
 
     worker.send('ready', 'Master');
