@@ -4,6 +4,7 @@
  * @version 2017/12/11
  */
 
+import { typeOf } from '../utils';
 import { encode, fallback } from './utils';
 import { supportMessage } from './support';
 

@@ -11,15 +11,7 @@
 
 <body>
   <script>
-    var worker = new Messenger('worker');
-
-    worker.add('master', window.parent);
-
-    worker.listen(function (message) {
-      console.log(message);
-    });
-
-    worker.send('Worker ready', 'master');
+    new CORSWorker();
   </script>
 </body>
 

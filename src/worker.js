@@ -6,6 +6,23 @@
 
 import Messenger from './messenger/messenger';
 
-this.Messenger = Messenger;
+export default function Worker() {
+  var worker = new Messenger('Worker');
 
-export default Messenger;
+  worker.add('Master', window.parent);
+
+  worker.listen(function(response) {
+    response = JSON.parse(response);
+
+    worker.send(
+      JSON.stringify({
+        valid: true,
+        uid: response.uid,
+        data: { username: 'nuintun' }
+      }),
+      'Master'
+    );
+  });
+
+  worker.send('ready', 'Master');
+}

@@ -16,6 +16,12 @@
   /**
    * @module utils
    * @license MIT
+   * @version 2017/12/07
+   */
+
+  /**
+   * @module utils
+   * @license MIT
    * @version 2017/12/11
    */
 
@@ -146,7 +152,7 @@
    * @constructor
    * @param {string} name
    */
-  function Messenger$1(name, namespace) {
+  function Messenger(name, namespace) {
     this.name = String(name);
     this.namespace = arguments.length > 1 ? String(namespace) : 'Messenger';
 
@@ -160,7 +166,7 @@
    * @private
    * @method init
    */
-  Messenger$1.prototype.init = function() {
+  Messenger.prototype.init = function() {
     var name = this.name;
     var namespace = this.namespace;
     var listens = this.listens;
@@ -197,7 +203,7 @@
    * @description Add a target
    * @param {window} target
    */
-  Messenger$1.prototype.add = function(name, target) {
+  Messenger.prototype.add = function(name, target) {
     this.targets[name] = new Target(name, target, this.namespace);
   };
 
@@ -206,7 +212,7 @@
    * @method listen
    * @param {Function} callback
    */
-  Messenger$1.prototype.listen = function(callback) {
+  Messenger.prototype.listen = function(callback) {
     this.listens.push(callback);
   };
 
@@ -214,7 +220,7 @@
    * @public
    * @method clear
    */
-  Messenger$1.prototype.clear = function() {
+  Messenger.prototype.clear = function() {
     this.listens = [];
   };
 
@@ -223,7 +229,7 @@
    * @method send
    * @param {string} message
    */
-  Messenger$1.prototype.send = function(message, target) {
+  Messenger.prototype.send = function(message, target) {
     var targets = this.targets;
 
     if (arguments.length > 1) {
@@ -247,8 +253,27 @@
    * @version 2017/12/07
    */
 
-  window.Messenger = Messenger$1;
+  function Worker() {
+    var worker = new Messenger('Worker');
 
-  return Messenger$1;
+    worker.add('Master', window.parent);
+
+    worker.listen(function(response) {
+      response = JSON.parse(response);
+
+      worker.send(
+        JSON.stringify({
+          valid: true,
+          uid: response.uid,
+          data: { username: 'nuintun' }
+        }),
+        'Master'
+      );
+    });
+
+    worker.send('ready', 'Master');
+  }
+
+  return Worker;
 
 })));
