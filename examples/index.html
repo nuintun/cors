@@ -6,25 +6,20 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <script src="https://nuintun.github.io/fetch/examples/json2.min.js"></script>
-  <script src="https://nuintun.github.io/promise/dist/promise.min.js"></script>
+  <script src="./json2.min.js"></script>
+  <script src="./promise.min.js"></script>
   <script src="../dist/master.js"></script>
+
 </head>
 
 <body>
   <script>
-    var cors = new CORSMaster('//127.0.0.1:8080/examples/proxy.html');
+    var cors = new CORSMaster('//127.0.0.1:8080/examples/api.html');
 
-    cors.ready(function () {
-      console.log('Worker ready!');
-    });
-
-    cors.ready(function () {
-      cors.request('//127.0.0.1:8080/package.json')
-        .then(function (response) {
-          console.log(response);
-        });
-    });
+    cors.request('//127.0.0.1:8080/package.json')
+      .then(function (response) {
+        console.log(response);
+      });
   </script>
 </body>
 

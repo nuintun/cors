@@ -5,6 +5,7 @@
  */
 
 import { uid } from './utils';
+import domReady from './dom-ready';
 import Messenger from './messenger/messenger';
 
 export default function Master(url) {
@@ -14,7 +15,7 @@ export default function Master(url) {
 }
 
 Master.prototype = {
-  ready: function(callback) {
+  '<onready>': function(callback) {
     var callbacks = this['<callbacks>'];
 
     if (this['<ready>']) {
@@ -34,48 +35,51 @@ Master.prototype = {
 
     iframe.src = url;
 
-    document.documentElement.appendChild(iframe);
-
     var self = this;
-    var callbacks = this['<callbacks>'];
+    var callbacks = self['<callbacks>'];
     var messenger = new Messenger('Master');
 
-    messenger.add('Worker', iframe.contentWindow);
+    domReady(function() {
+      document.body.appendChild(iframe);
 
-    messenger.listen(function(response) {
-      if (response === 'ready') {
-        if (!self['<ready>']) {
-          self['<ready>'] = true;
+      messenger.add('Worker', iframe.contentWindow);
 
-          var ready = callbacks.ready;
+      messenger.listen(function(response) {
+        if (response === 'ready') {
+          if (!self['<ready>']) {
+            self['<ready>'] = true;
 
-          for (var i = 0, length = ready.length; i < length; i++) {
-            ready[i]();
+            var ready = callbacks.ready;
+
+            for (var i = 0, length = ready.length; i < length; i++) {
+              ready[i]();
+            }
+
+            delete callbacks.ready;
+          }
+        } else {
+          try {
+            response = JSON.parse(response);
+          } catch (error) {
+            // Unknow error
+            return console && console.error && console.error(response);
           }
 
-          delete callbacks.ready;
-        }
-      } else {
-        try {
-          response = JSON.parse(response);
-        } catch (error) {
-          // Unknow error
-          return console && console.error && console.error(response);
-        }
+          var id = response.uid;
 
-        var id = response.uid;
+          if (callbacks[id]) {
+            callbacks[id](response);
 
-        if (callbacks[id]) {
-          callbacks[id](response);
-
-          delete callbacks[id];
+            delete callbacks[id];
+          }
         }
-      }
+      });
     });
 
     return messenger;
   },
   request: function(url, options) {
+    var self = this;
     var callbacks = this['<callbacks>'];
     var messenger = this['<messenger>'];
 
@@ -90,14 +94,16 @@ Master.prototype = {
         }
       };
 
-      messenger.send(
-        JSON.stringify({
-          uid: id,
-          url: url,
-          options: options
-        }),
-        'Worker'
-      );
+      self['<onready>'](function() {
+        messenger.send(
+          JSON.stringify({
+            uid: id,
+            url: url,
+            options: options
+          }),
+          'Worker'
+        );
+      });
     });
   }
 };

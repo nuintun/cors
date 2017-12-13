@@ -26,6 +26,105 @@
   }
 
   /**
+   * @module master
+   * @license MIT
+   * @version 2017/12/07
+   * @see https://github.com/jakobmattsson/onDomReady
+   */
+
+  var readyTimer;
+  var isBound = false;
+  var readyList = [];
+
+  function whenReady() {
+    // Make sure body exists, at least, in case IE gets a little overzealous.
+    // This is taked directly from jQuery's implementation.
+    if (!document.body) {
+      clearTimeout(readyTimer);
+
+      return (readyTimer = setTimeout(whenReady));
+    }
+
+    for (var i = 0; i < readyList.length; i++) {
+      readyList[i]();
+    }
+
+    readyList = [];
+  }
+
+  function DOMContentLoaded() {
+    document.removeEventListener('DOMContentLoaded', DOMContentLoaded, false);
+
+    whenReady();
+  }
+
+  function onreadystatechange() {
+    if (document.readyState === 'complete') {
+      document.detachEvent('onreadystatechange', onreadystatechange);
+
+      whenReady();
+    }
+  }
+
+  function doScrollCheck() {
+    // stop searching if we have no functions to call
+    // (or, in other words, if they have already been called)
+    if (readyList.length > 0) {
+      try {
+        // If IE is used, use the trick by Diego Perini
+        // http://javascript.nwbox.com/IEContentLoaded/
+        document.documentElement.doScroll('left');
+      } catch (error) {
+        return setTimeout(doScrollCheck, 1);
+      }
+
+      // and execute any waiting functions
+      whenReady();
+    }
+  }
+
+  function bindReady() {
+    // Mozilla, Opera and webkit nightlies currently support this event
+    if (document.addEventListener) {
+      document.addEventListener('DOMContentLoaded', DOMContentLoaded, false);
+      window.addEventListener('load', whenReady, false); // fallback
+      // If IE event model is used
+    } else if (document.attachEvent) {
+      document.attachEvent('onreadystatechange', onreadystatechange);
+      window.attachEvent('onload', whenReady); // fallback
+
+      // If IE and not a frame, continually check to see if the document is ready
+      var toplevel = false;
+
+      try {
+        toplevel = window.frameElement == null;
+      } catch (error) {
+        // Do nothing
+      }
+
+      // The DOM ready check for Internet Explorer
+      if (document.documentElement.doScroll && toplevel) {
+        doScrollCheck();
+      }
+    }
+  }
+
+  var domReady = function(callback) {
+    // Push the given callback onto the list of functions to execute when ready.
+    // If the dom has alredy loaded, call 'whenReady' right away.
+    // Otherwise bind the ready-event if it hasn't been done already
+    readyList.push(callback);
+
+    if (document.readyState === 'complete') {
+      whenReady();
+    } else if (!isBound) {
+      bindReady();
+
+      isBound = true;
+    }
+  };
+
+  /**
    * @module utils
    * @license MIT
    * @version 2017/12/11
@@ -266,7 +365,7 @@
   }
 
   Master.prototype = {
-    ready: function(callback) {
+    '<onready>': function(callback) {
       var callbacks = this['<callbacks>'];
 
       if (this['<ready>']) {
@@ -286,48 +385,51 @@
 
       iframe.src = url;
 
-      document.documentElement.appendChild(iframe);
-
       var self = this;
-      var callbacks = this['<callbacks>'];
+      var callbacks = self['<callbacks>'];
       var messenger = new Messenger('Master');
 
-      messenger.add('Worker', iframe.contentWindow);
+      domReady(function() {
+        document.body.appendChild(iframe);
 
-      messenger.listen(function(response) {
-        if (response === 'ready') {
-          if (!self['<ready>']) {
-            self['<ready>'] = true;
+        messenger.add('Worker', iframe.contentWindow);
 
-            var ready = callbacks.ready;
+        messenger.listen(function(response) {
+          if (response === 'ready') {
+            if (!self['<ready>']) {
+              self['<ready>'] = true;
 
-            for (var i = 0, length = ready.length; i < length; i++) {
-              ready[i]();
+              var ready = callbacks.ready;
+
+              for (var i = 0, length = ready.length; i < length; i++) {
+                ready[i]();
+              }
+
+              delete callbacks.ready;
+            }
+          } else {
+            try {
+              response = JSON.parse(response);
+            } catch (error) {
+              // Unknow error
+              return console && console.error && console.error(response);
             }
 
-            delete callbacks.ready;
-          }
-        } else {
-          try {
-            response = JSON.parse(response);
-          } catch (error) {
-            // Unknow error
-            return console && console.error && console.error(response);
-          }
+            var id = response.uid;
 
-          var id = response.uid;
+            if (callbacks[id]) {
+              callbacks[id](response);
 
-          if (callbacks[id]) {
-            callbacks[id](response);
-
-            delete callbacks[id];
+              delete callbacks[id];
+            }
           }
-        }
+        });
       });
 
       return messenger;
     },
     request: function(url, options) {
+      var self = this;
       var callbacks = this['<callbacks>'];
       var messenger = this['<messenger>'];
 
@@ -342,14 +444,16 @@
           }
         };
 
-        messenger.send(
-          JSON.stringify({
-            uid: id,
-            url: url,
-            options: options
-          }),
-          'Worker'
-        );
+        self['<onready>'](function() {
+          messenger.send(
+            JSON.stringify({
+              uid: id,
+              url: url,
+              options: options
+            }),
+            'Worker'
+          );
+        });
       });
     }
   };
