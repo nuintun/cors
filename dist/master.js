@@ -358,6 +358,8 @@
       iframe.setAttribute('marginwidth', '0');
       iframe.setAttribute('marginheight', '0');
 
+      iframe.style.display = 'none';
+
       iframe.src = url;
 
       var self = this;
@@ -367,7 +369,7 @@
       domReady(function() {
         document.body.appendChild(iframe);
 
-        messenger.add('Worker', iframe.contentWindow, iframe.src);
+        messenger.add('Worker', iframe.contentWindow);
 
         messenger.listen(function(data) {
           if (data === 'ready') {

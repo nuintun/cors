@@ -221,7 +221,7 @@
   function Worker() {
     var worker = new Messenger('Worker', 'CORS');
 
-    worker.add('Master', window.parent, document.referrer);
+    worker.add('Master', window.parent);
 
     worker.listen(function(data, origin) {
       var xhr = new XMLHttpRequest();
