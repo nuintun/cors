@@ -21,6 +21,10 @@ export default function Worker() {
       }
     };
 
+    xhr.onerror = function() {
+      worker.send('Master', { valid: false, uid: data.uid, data: 'Request ' + data.url + ' failed' }, origin);
+    };
+
     xhr.open('GET', data.url);
     xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
     xhr.send();
