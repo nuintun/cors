@@ -27,7 +27,7 @@ function prefix(name, namespace) {
  * @returns {string}
  */
 export function encode(name, message, namespace) {
-  return prefix(name, namespace) + message + ETX;
+  return prefix(name, namespace) + JSON.stringify(message) + ETX;
 }
 
 /**
@@ -38,7 +38,14 @@ export function encode(name, message, namespace) {
  * @returns {string}
  */
 export function decode(name, message, namespace) {
-  return message.slice(prefix(name, namespace).length, -1);
+  message = message.slice(prefix(name, namespace).length, -1);
+
+  // Error catch
+  try {
+    return JSON.parse(message);
+  } catch (error) {
+    return message;
+  }
 }
 
 /**
@@ -50,21 +57,4 @@ export function decode(name, message, namespace) {
  */
 export function isLegal(name, message, namespace) {
   return message.indexOf(prefix(name, namespace)) === 0 && message.lastIndexOf(ETX) === message.length - 1;
-}
-
-/**
- * @function fallback
- * @param {string} name
- * @param {Function} callback
- * @param {string} namespace
- * @returns {Function}
- */
-export function fallback(name, callback, namespace) {
-  name = ACK + '-' + namespace + '-' + name;
-
-  if (typeof callback === 'function') {
-    window.navigator[name] = callback;
-  }
-
-  return window.navigator[name];
 }

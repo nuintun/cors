@@ -1,39 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
-  <title>Master</title>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <script src="./json2.min.js"></script>
-  <script src="./promise.min.js"></script>
-  <script src="../dist/master.js"></script>
-
-</head>
-
-<body>
-  <script>
-    var cors = new CORSMaster('//127.0.0.1:8080/examples/api.html');
-
-    cors.request('//127.0.0.1:8080/package.json')
-      .then(function (response) {
-        console.log(JSON.parse(response));
-
-        var iframe = document.getElementsByTagName('iframe')[0];
-
-        iframe.onload = function () {
-          console.log('------------------------------');
-
-          cors.request('//127.0.0.1:8080/package.json')
-            .then(function (response) {
-              console.log(JSON.parse(response));
-            });
-        };
-
-        iframe.src = '//127.0.0.1:9090/examples/api.html';
-      });
-  </script>
-</body>
-
+  <head>
+    <title>Master</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link type="text/css" rel="stylesheet" href="./index.css" />
+    <script src="./json2.min.js"></script>
+    <script src="./promise.min.js"></script>
+    <script src="../dist/master.js"></script>
+  </head>
+  <body>
+    <div>
+      <a id="cors" hidefocus="true" href="javascript:;" class="ui-button ui-button-green">⚡ cors ⚡</a>
+    </div>
+    <div>
+      <pre id="output">✨ Pleace click the cors button! ✨</pre>
+    </div>
+    <script src="./index.js"></script>
+  </body>
 </html>

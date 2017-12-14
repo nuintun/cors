@@ -5,7 +5,7 @@
  */
 
 import domReady from './dom-ready';
-import { uid, domain } from './utils';
+import { uid, domain, typeOf } from './utils';
 import Messenger from './messenger/messenger';
 
 export default function Master(url) {
@@ -38,15 +38,15 @@ Master.prototype = {
 
     var self = this;
     var callbacks = self['<callbacks>'];
-    var messenger = new Messenger('Master');
+    var messenger = new Messenger('Master', 'CORS');
 
     domReady(function() {
       document.body.appendChild(iframe);
 
       messenger.add('Worker', iframe.contentWindow, iframe.src);
 
-      messenger.listen(function(message, origin) {
-        if (message === 'ready') {
+      messenger.listen(function(data) {
+        if (data === 'ready') {
           if (!self['<ready>']) {
             self['<ready>'] = true;
 
@@ -58,22 +58,13 @@ Master.prototype = {
 
             delete callbacks.ready;
           }
-        } else {
-          try {
-            var data = JSON.parse(message);
-          } catch (error) {
-            // Unknow error
-            return console && console.error && console.error(message);
-          }
+        } else if (typeOf(data) === 'object') {
+          var id = data.uid;
 
-          if (data) {
-            var id = data.uid;
+          if (callbacks[id]) {
+            callbacks[id](data);
 
-            if (callbacks[id]) {
-              callbacks[id](data);
-
-              delete callbacks[id];
-            }
+            delete callbacks[id];
           }
         }
       });
@@ -99,15 +90,7 @@ Master.prototype = {
       };
 
       self['<onready>'](function() {
-        messenger.send(
-          JSON.stringify({
-            uid: id,
-            url: url,
-            options: options
-          }),
-          'Worker',
-          origin
-        );
+        messenger.send('Worker', { uid: id, url: url, options: options }, origin);
       });
     });
   }

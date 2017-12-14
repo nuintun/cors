@@ -19,8 +19,10 @@
    * @version 2017/12/13
    */
 
-  var supportIEEvent = 'attachEvent' in window;
-  var supportW3CEvent = 'addEventListener' in window;
+  var documentElement = document.documentElement;
+
+  var supportIEEvent = 'attachEvent' in documentElement;
+  var supportW3CEvent = 'addEventListener' in documentElement;
 
   /**
    * @module dom-ready
@@ -133,7 +135,18 @@
     return 'UID-' + UID++;
   }
 
+  var toString = Object.prototype.toString;
 
+  function typeOf(value) {
+    if (value === null) return 'null';
+
+    if (value === void 0) return 'undefined';
+
+    return toString
+      .call(value)
+      .slice(8, -1)
+      .toLowerCase();
+  }
 
   var DOMAIN_RE = /^([a-z0-9.+-]+:)?\/\/(?:[^/:]*(?::[^/]*)?@)?([^/]+)/i;
 
@@ -167,8 +180,6 @@
   var SOH = '\x01';
   var STX = '\x02';
   var ETX = '\x03';
-  var ACK = '\x06';
-
   /**
    * @function prefix
    * @param {string} name
@@ -187,7 +198,7 @@
    * @returns {string}
    */
   function encode(name, message, namespace) {
-    return prefix(name, namespace) + message + ETX;
+    return prefix(name, namespace) + JSON.stringify(message) + ETX;
   }
 
   /**
@@ -198,7 +209,14 @@
    * @returns {string}
    */
   function decode(name, message, namespace) {
-    return message.slice(prefix(name, namespace).length, -1);
+    message = message.slice(prefix(name, namespace).length, -1);
+
+    // Error catch
+    try {
+      return JSON.parse(message);
+    } catch (error) {
+      return message;
+    }
   }
 
   /**
@@ -213,77 +231,6 @@
   }
 
   /**
-   * @function fallback
-   * @param {string} name
-   * @param {Function} callback
-   * @param {string} namespace
-   * @returns {Function}
-   */
-  function fallback(name, callback, namespace) {
-    name = ACK + '-' + namespace + '-' + name;
-
-    if (typeof callback === 'function') {
-      window.navigator[name] = callback;
-    }
-
-    return window.navigator[name];
-  }
-
-  /**
-   * @module support
-   * @license MIT
-   * @version 2017/12/11
-   */
-
-  var supportMessage = 'postMessage' in window;
-
-  /**
-   * @module target
-   * @license MIT
-   * @version 2017/12/11
-   */
-
-  /**
-   * @class Target
-   * @constructor
-   * @param {string} name
-   * @param {window} target
-   * @param {string} namespace
-   * @param {prefix}
-   */
-  function Target(name, target, origin, namespace) {
-    this.name = String(name);
-    this.target = target;
-    this.origin = domain(origin);
-    this.namespace = namespace;
-  }
-
-  /**
-   * @public
-   * @method send
-   * @param {string} message
-   */
-  if (supportMessage) {
-    Target.prototype.send = function(message, origin) {
-      console.log(origin, '------', this.origin);
-
-      this.target.postMessage(encode(this.name, message, this.namespace), origin);
-    };
-  } else {
-    Target.prototype.send = function(message, origin) {
-      if (origin === '*' || origin === this.origin) {
-        var callback = fallback(this.name, this.namespace);
-
-        if (typeof callback === 'function') {
-          callback({ origin: this.origin, data: encode(message) });
-        } else {
-          throw new Error('Target callback function is not defined');
-        }
-      }
-    };
-  }
-
-  /**
    * @module messenger
    * @license MIT
    * @version 2017/12/07
@@ -295,47 +242,41 @@
    * @param {string} name
    */
   function Messenger(name, namespace) {
-    this.name = String(name);
-    this.namespace = arguments.length > 1 ? String(namespace) : 'Messenger';
+    this['<name>'] = String(name);
+    this['<namespace>'] = String(namespace);
 
-    this.targets = {};
-    this.listens = [];
+    this['<targets>'] = {};
+    this['<listeners>'] = [];
 
-    this.init();
+    this['<init>']();
   }
 
   /**
    * @private
-   * @method init
+   * @method <init>
    */
-  Messenger.prototype.init = function() {
-    var name = this.name;
-    var namespace = this.namespace;
-    var listens = this.listens;
+  Messenger.prototype['<init>'] = function() {
+    var name = this['<name>'];
+    var namespace = this['<namespace>'];
+    var listeners = this['<listeners>'];
 
     function callback(event) {
       var message = event.data;
+      var origin = event.origin;
 
       if (isLegal(name, message, namespace)) {
-        var origin = event.origin;
-
         message = decode(name, message, namespace);
 
-        for (var i = 0, length = listens.length; i < length; i++) {
-          listens[i](message, origin);
+        for (var i = 0, length = listeners.length; i < length; i++) {
+          listeners[i](message, origin);
         }
       }
     }
 
-    if (supportMessage) {
-      if (supportW3CEvent) {
-        window.addEventListener('message', callback, false);
-      } else if (supportIEEvent) {
-        window.attachEvent('onmessage', callback);
-      }
-    } else {
-      // Compact IE6-7
-      fallback(name, callback, namespace);
+    if (supportW3CEvent) {
+      window.addEventListener('message', callback, false);
+    } else if (supportIEEvent) {
+      window.attachEvent('onmessage', callback);
     }
   };
 
@@ -345,46 +286,42 @@
    * @description Add a target
    * @param {window} target
    */
-  Messenger.prototype.add = function(name, target, origin) {
-    this.targets[name] = new Target(name, target, origin, this.namespace);
+  Messenger.prototype.add = function(name, target) {
+    this['<targets>'][name] = target;
   };
 
   /**
    * @public
    * @method listen
-   * @param {Function} callback
+   * @description Add a listener
+   * @param {Function} listener
    */
-  Messenger.prototype.listen = function(callback) {
-    this.listens.push(callback);
-  };
-
-  /**
-   * @public
-   * @method clear
-   */
-  Messenger.prototype.clear = function() {
-    this.listens = [];
+  Messenger.prototype.listen = function(listener) {
+    this['<listeners>'].push(listener);
   };
 
   /**
    * @public
    * @method send
+   * @param {string} name If name equal *, sent to all targets
    * @param {string} message
+   * @param {string} origin
    */
-  Messenger.prototype.send = function(message, target, origin) {
-    var targets = this.targets;
+  Messenger.prototype.send = function(name, message, origin) {
+    name = String(name);
 
-    if (arguments.length > 1) {
-      target = String(target);
+    var targets = this['<targets>'];
+    var namespace = this['<namespace>'];
 
-      if (targets.hasOwnProperty(target)) {
-        targets[target].send(message, origin);
+    if (name === '*') {
+      for (name in targets) {
+        if (targets.hasOwnProperty(name)) {
+          targets[name].postMessage(encode(name, message, namespace), origin);
+        }
       }
     } else {
-      for (var name in targets) {
-        if (targets.hasOwnProperty(name)) {
-          targets[name].send(message, origin);
-        }
+      if (targets.hasOwnProperty(name)) {
+        targets[name].postMessage(encode(name, message, namespace), origin);
       }
     }
   };
@@ -425,15 +362,15 @@
 
       var self = this;
       var callbacks = self['<callbacks>'];
-      var messenger = new Messenger('Master');
+      var messenger = new Messenger('Master', 'CORS');
 
       domReady(function() {
         document.body.appendChild(iframe);
 
         messenger.add('Worker', iframe.contentWindow, iframe.src);
 
-        messenger.listen(function(message, origin) {
-          if (message === 'ready') {
+        messenger.listen(function(data) {
+          if (data === 'ready') {
             if (!self['<ready>']) {
               self['<ready>'] = true;
 
@@ -445,22 +382,13 @@
 
               delete callbacks.ready;
             }
-          } else {
-            try {
-              var data = JSON.parse(message);
-            } catch (error) {
-              // Unknow error
-              return console && console.error && console.error(message);
-            }
+          } else if (typeOf(data) === 'object') {
+            var id = data.uid;
 
-            if (data) {
-              var id = data.uid;
+            if (callbacks[id]) {
+              callbacks[id](data);
 
-              if (callbacks[id]) {
-                callbacks[id](data);
-
-                delete callbacks[id];
-              }
+              delete callbacks[id];
             }
           }
         });
@@ -486,15 +414,7 @@
         };
 
         self['<onready>'](function() {
-          messenger.send(
-            JSON.stringify({
-              uid: id,
-              url: url,
-              options: options
-            }),
-            'Worker',
-            origin
-          );
+          messenger.send('Worker', { uid: id, url: url, options: options }, origin);
         });
       });
     }
