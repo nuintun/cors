@@ -4,7 +4,6 @@
  * @version 2017/12/07
  */
 
-import param from './param';
 import domReady from './dom-ready';
 import Messenger from './messenger/messenger';
 import { uid, domain, typeOf } from './utils';
