@@ -160,7 +160,7 @@
   /**
    * @module fetch
    * @license MIT
-   * @version 2017/12/07
+   * @version 2017/12/14
    */
 
   var nonce = 0;
