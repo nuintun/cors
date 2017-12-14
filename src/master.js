@@ -16,6 +16,11 @@ export default function Master(url) {
 }
 
 Master.prototype = {
+  /**
+   * @private
+   * @method <onready>
+   * @param {Function} callback
+   */
   '<onready>': function(callback) {
     var callbacks = this['<callbacks>'];
 
@@ -25,6 +30,13 @@ Master.prototype = {
       callbacks.ready.push(callback);
     }
   },
+
+  /**
+   * @private
+   * @method <proxy>
+   * @param {string} url
+   * @returns {Messenger}
+   */
   '<proxy>': function(url) {
     var iframe = document.createElement('iframe');
 
@@ -39,34 +51,43 @@ Master.prototype = {
     iframe.src = url;
 
     var self = this;
+    var origin = self['<origin>'];
     var callbacks = self['<callbacks>'];
     var messenger = new Messenger('Master', 'CORS');
 
+    // On DOM ready
     domReady(function() {
+      // Append to DOM tree
       document.body.appendChild(iframe);
 
+      // Add source
       messenger.add('Worker', iframe.contentWindow);
 
-      messenger.listen(function(data) {
-        if (data === 'ready') {
-          if (!self['<ready>']) {
-            self['<ready>'] = true;
+      // Add listener
+      messenger.onmessage(function(response) {
+        if (response.origin === origin) {
+          var data = response.data;
 
-            var ready = callbacks.ready;
+          if (data === 'ready') {
+            if (!self['<ready>']) {
+              self['<ready>'] = true;
 
-            for (var i = 0, length = ready.length; i < length; i++) {
-              ready[i]();
+              var ready = callbacks.ready;
+
+              for (var i = 0, length = ready.length; i < length; i++) {
+                ready[i]();
+              }
+
+              delete callbacks.ready;
             }
+          } else if (typeOf(data) === 'object') {
+            var id = data.uid;
 
-            delete callbacks.ready;
-          }
-        } else if (typeOf(data) === 'object') {
-          var id = data.uid;
+            if (callbacks[id]) {
+              callbacks[id](data);
 
-          if (callbacks[id]) {
-            callbacks[id](data);
-
-            delete callbacks[id];
+              delete callbacks[id];
+            }
           }
         }
       });
@@ -74,6 +95,14 @@ Master.prototype = {
 
     return messenger;
   },
+
+  /**
+   * @public
+   * @method request
+   * @param {string} url
+   * @param {Object} options
+   * @returns {Promise}
+   */
   request: function(url, options) {
     var self = this;
     var origin = self['<origin>'];

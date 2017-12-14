@@ -55,6 +55,22 @@ export function decode(name, message, namespace) {
  * @param {string} namespace
  * @returns {boolean}
  */
-export function isLegal(name, message, namespace) {
+export function isLegalMessage(name, message, namespace) {
   return message.indexOf(prefix(name, namespace)) === 0 && message.lastIndexOf(ETX) === message.length - 1;
+}
+
+/**
+ * @function findSourceName
+ * @param {window} source
+ * @param {Object} targets
+ * @returns {string|null}
+ */
+export function findSourceName(source, targets) {
+  for (var name in targets) {
+    if (targets.hasOwnProperty(name) && targets[name] === source) {
+      return name;
+    }
+  }
+
+  return null;
 }

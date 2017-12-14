@@ -12,17 +12,20 @@ export default function Worker() {
 
   worker.add('Master', window.parent);
 
-  worker.listen(function(data, origin) {
+  worker.onmessage(function(response) {
+    var data = response.data;
+    var origin = response.origin;
+    var source = response.source;
     var xhr = new XMLHttpRequest();
 
     xhr.onreadystatechange = function() {
       if (xhr.readyState === 4) {
-        worker.send('Master', { valid: true, uid: data.uid, data: xhr.responseText }, origin);
+        worker.send(source, { valid: true, uid: data.uid, data: xhr.responseText }, origin);
       }
     };
 
     xhr.onerror = function() {
-      worker.send('Master', { valid: false, uid: data.uid, data: 'Request ' + data.url + ' failed' }, origin);
+      worker.send(source, { valid: false, uid: data.uid, data: 'Request ' + data.url + ' failed' }, origin);
     };
 
     xhr.open('GET', data.url);

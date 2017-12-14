@@ -4,8 +4,8 @@
  * @version 2017/12/07
  */
 
-import { encode, decode, isLegal } from './utils';
 import { supportIEEvent, supportW3CEvent } from '../support';
+import { encode, decode, findSourceName, isLegalMessage } from './utils';
 
 /**
  * @class Messenger
@@ -16,7 +16,7 @@ export default function Messenger(name, namespace) {
   this['<name>'] = String(name);
   this['<namespace>'] = String(namespace);
 
-  this['<targets>'] = {};
+  this['<sources>'] = {};
   this['<listeners>'] = [];
 
   this['<init>']();
@@ -28,22 +28,33 @@ export default function Messenger(name, namespace) {
  */
 Messenger.prototype['<init>'] = function() {
   var name = this['<name>'];
+  var sources = this['<sources>'];
   var namespace = this['<namespace>'];
   var listeners = this['<listeners>'];
 
   function callback(event) {
-    var message = event.data;
-    var origin = event.origin;
+    // Get source name
+    var source = findSourceName(event.source, sources);
 
-    if (isLegal(name, message, namespace)) {
-      message = decode(name, message, namespace);
+    // Source must in sources
+    if (source !== null) {
+      var message = event.data;
 
-      for (var i = 0, length = listeners.length; i < length; i++) {
-        listeners[i](message, origin);
+      // Is message legal
+      if (isLegalMessage(name, message, namespace)) {
+        var origin = event.origin;
+
+        // Decode message
+        message = decode(name, message, namespace);
+
+        for (var i = 0, length = listeners.length; i < length; i++) {
+          listeners[i]({ data: message, origin: origin, source: source });
+        }
       }
     }
   }
 
+  // Bind message listener
   if (supportW3CEvent) {
     window.addEventListener('message', callback, false);
   } else if (supportIEEvent) {
@@ -54,45 +65,45 @@ Messenger.prototype['<init>'] = function() {
 /**
  * @public
  * @method add
- * @description Add a target
- * @param {window} target
+ * @description Add a source
+ * @param {window} source
  */
-Messenger.prototype.add = function(name, target) {
-  this['<targets>'][name] = target;
+Messenger.prototype.add = function(name, source) {
+  this['<sources>'][name] = source;
 };
 
 /**
  * @public
- * @method listen
- * @description Add a listener
+ * @method onmessage
+ * @description Add a onmessage listener
  * @param {Function} listener
  */
-Messenger.prototype.listen = function(listener) {
+Messenger.prototype.onmessage = function(listener) {
   this['<listeners>'].push(listener);
 };
 
 /**
  * @public
  * @method send
- * @param {string} name If name equal *, sent to all targets
+ * @param {string} source If source equal *, sent to all sources
  * @param {string} message
  * @param {string} origin
  */
-Messenger.prototype.send = function(name, message, origin) {
-  name = String(name);
+Messenger.prototype.send = function(source, message, origin) {
+  source = String(source);
 
-  var targets = this['<targets>'];
+  var sources = this['<sources>'];
   var namespace = this['<namespace>'];
 
-  if (name === '*') {
-    for (name in targets) {
-      if (targets.hasOwnProperty(name)) {
-        targets[name].postMessage(encode(name, message, namespace), origin);
+  if (source === '*') {
+    for (source in sources) {
+      if (sources.hasOwnProperty(source)) {
+        sources[source].postMessage(encode(source, message, namespace), origin);
       }
     }
   } else {
-    if (targets.hasOwnProperty(name)) {
-      targets[name].postMessage(encode(name, message, namespace), origin);
+    if (sources.hasOwnProperty(source)) {
+      sources[source].postMessage(encode(source, message, namespace), origin);
     }
   }
 };

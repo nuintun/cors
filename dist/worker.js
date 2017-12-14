@@ -47,6 +47,17 @@
   }
 
   /**
+   * @module support
+   * @license MIT
+   * @version 2017/12/13
+   */
+
+  var documentElement = document.documentElement;
+
+  var supportIEEvent = 'attachEvent' in documentElement;
+  var supportW3CEvent = 'addEventListener' in documentElement;
+
+  /**
    * @module utils
    * @license MIT
    * @version 2017/12/11
@@ -101,20 +112,25 @@
    * @param {string} namespace
    * @returns {boolean}
    */
-  function isLegal(name, message, namespace) {
+  function isLegalMessage(name, message, namespace) {
     return message.indexOf(prefix(name, namespace)) === 0 && message.lastIndexOf(ETX) === message.length - 1;
   }
 
   /**
-   * @module support
-   * @license MIT
-   * @version 2017/12/13
+   * @function findSourceName
+   * @param {window} source
+   * @param {Object} targets
+   * @returns {string|null}
    */
+  function findSourceName(source, targets) {
+    for (var name in targets) {
+      if (targets.hasOwnProperty(name) && targets[name] === source) {
+        return name;
+      }
+    }
 
-  var documentElement = document.documentElement;
-
-  var supportIEEvent = 'attachEvent' in documentElement;
-  var supportW3CEvent = 'addEventListener' in documentElement;
+    return null;
+  }
 
   /**
    * @module messenger
@@ -131,7 +147,7 @@
     this['<name>'] = String(name);
     this['<namespace>'] = String(namespace);
 
-    this['<targets>'] = {};
+    this['<sources>'] = {};
     this['<listeners>'] = [];
 
     this['<init>']();
@@ -143,22 +159,33 @@
    */
   Messenger.prototype['<init>'] = function() {
     var name = this['<name>'];
+    var sources = this['<sources>'];
     var namespace = this['<namespace>'];
     var listeners = this['<listeners>'];
 
     function callback(event) {
-      var message = event.data;
-      var origin = event.origin;
+      // Get source name
+      var source = findSourceName(event.source, sources);
 
-      if (isLegal(name, message, namespace)) {
-        message = decode(name, message, namespace);
+      // Source must in sources
+      if (source !== null) {
+        var message = event.data;
 
-        for (var i = 0, length = listeners.length; i < length; i++) {
-          listeners[i](message, origin);
+        // Is message legal
+        if (isLegalMessage(name, message, namespace)) {
+          var origin = event.origin;
+
+          // Decode message
+          message = decode(name, message, namespace);
+
+          for (var i = 0, length = listeners.length; i < length; i++) {
+            listeners[i]({ data: message, origin: origin, source: source });
+          }
         }
       }
     }
 
+    // Bind message listener
     if (supportW3CEvent) {
       window.addEventListener('message', callback, false);
     } else if (supportIEEvent) {
@@ -169,45 +196,45 @@
   /**
    * @public
    * @method add
-   * @description Add a target
-   * @param {window} target
+   * @description Add a source
+   * @param {window} source
    */
-  Messenger.prototype.add = function(name, target) {
-    this['<targets>'][name] = target;
+  Messenger.prototype.add = function(name, source) {
+    this['<sources>'][name] = source;
   };
 
   /**
    * @public
-   * @method listen
-   * @description Add a listener
+   * @method onmessage
+   * @description Add a onmessage listener
    * @param {Function} listener
    */
-  Messenger.prototype.listen = function(listener) {
+  Messenger.prototype.onmessage = function(listener) {
     this['<listeners>'].push(listener);
   };
 
   /**
    * @public
    * @method send
-   * @param {string} name If name equal *, sent to all targets
+   * @param {string} source If source equal *, sent to all sources
    * @param {string} message
    * @param {string} origin
    */
-  Messenger.prototype.send = function(name, message, origin) {
-    name = String(name);
+  Messenger.prototype.send = function(source, message, origin) {
+    source = String(source);
 
-    var targets = this['<targets>'];
+    var sources = this['<sources>'];
     var namespace = this['<namespace>'];
 
-    if (name === '*') {
-      for (name in targets) {
-        if (targets.hasOwnProperty(name)) {
-          targets[name].postMessage(encode(name, message, namespace), origin);
+    if (source === '*') {
+      for (source in sources) {
+        if (sources.hasOwnProperty(source)) {
+          sources[source].postMessage(encode(source, message, namespace), origin);
         }
       }
     } else {
-      if (targets.hasOwnProperty(name)) {
-        targets[name].postMessage(encode(name, message, namespace), origin);
+      if (sources.hasOwnProperty(source)) {
+        sources[source].postMessage(encode(source, message, namespace), origin);
       }
     }
   };
@@ -223,17 +250,20 @@
 
     worker.add('Master', window.parent);
 
-    worker.listen(function(data, origin) {
+    worker.onmessage(function(response) {
+      var data = response.data;
+      var origin = response.origin;
+      var source = response.source;
       var xhr = new XMLHttpRequest();
 
       xhr.onreadystatechange = function() {
         if (xhr.readyState === 4) {
-          worker.send('Master', { valid: true, uid: data.uid, data: xhr.responseText }, origin);
+          worker.send(source, { valid: true, uid: data.uid, data: xhr.responseText }, origin);
         }
       };
 
       xhr.onerror = function() {
-        worker.send('Master', { valid: false, uid: data.uid, data: 'Request ' + data.url + ' failed' }, origin);
+        worker.send(source, { valid: false, uid: data.uid, data: 'Request ' + data.url + ' failed' }, origin);
       };
 
       xhr.open('GET', data.url);

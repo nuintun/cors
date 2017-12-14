@@ -226,8 +226,24 @@
    * @param {string} namespace
    * @returns {boolean}
    */
-  function isLegal(name, message, namespace) {
+  function isLegalMessage(name, message, namespace) {
     return message.indexOf(prefix(name, namespace)) === 0 && message.lastIndexOf(ETX) === message.length - 1;
+  }
+
+  /**
+   * @function findSourceName
+   * @param {window} source
+   * @param {Object} targets
+   * @returns {string|null}
+   */
+  function findSourceName(source, targets) {
+    for (var name in targets) {
+      if (targets.hasOwnProperty(name) && targets[name] === source) {
+        return name;
+      }
+    }
+
+    return null;
   }
 
   /**
@@ -245,7 +261,7 @@
     this['<name>'] = String(name);
     this['<namespace>'] = String(namespace);
 
-    this['<targets>'] = {};
+    this['<sources>'] = {};
     this['<listeners>'] = [];
 
     this['<init>']();
@@ -257,22 +273,33 @@
    */
   Messenger.prototype['<init>'] = function() {
     var name = this['<name>'];
+    var sources = this['<sources>'];
     var namespace = this['<namespace>'];
     var listeners = this['<listeners>'];
 
     function callback(event) {
-      var message = event.data;
-      var origin = event.origin;
+      // Get source name
+      var source = findSourceName(event.source, sources);
 
-      if (isLegal(name, message, namespace)) {
-        message = decode(name, message, namespace);
+      // Source must in sources
+      if (source !== null) {
+        var message = event.data;
 
-        for (var i = 0, length = listeners.length; i < length; i++) {
-          listeners[i](message, origin);
+        // Is message legal
+        if (isLegalMessage(name, message, namespace)) {
+          var origin = event.origin;
+
+          // Decode message
+          message = decode(name, message, namespace);
+
+          for (var i = 0, length = listeners.length; i < length; i++) {
+            listeners[i]({ data: message, origin: origin, source: source });
+          }
         }
       }
     }
 
+    // Bind message listener
     if (supportW3CEvent) {
       window.addEventListener('message', callback, false);
     } else if (supportIEEvent) {
@@ -283,45 +310,45 @@
   /**
    * @public
    * @method add
-   * @description Add a target
-   * @param {window} target
+   * @description Add a source
+   * @param {window} source
    */
-  Messenger.prototype.add = function(name, target) {
-    this['<targets>'][name] = target;
+  Messenger.prototype.add = function(name, source) {
+    this['<sources>'][name] = source;
   };
 
   /**
    * @public
-   * @method listen
-   * @description Add a listener
+   * @method onmessage
+   * @description Add a onmessage listener
    * @param {Function} listener
    */
-  Messenger.prototype.listen = function(listener) {
+  Messenger.prototype.onmessage = function(listener) {
     this['<listeners>'].push(listener);
   };
 
   /**
    * @public
    * @method send
-   * @param {string} name If name equal *, sent to all targets
+   * @param {string} source If source equal *, sent to all sources
    * @param {string} message
    * @param {string} origin
    */
-  Messenger.prototype.send = function(name, message, origin) {
-    name = String(name);
+  Messenger.prototype.send = function(source, message, origin) {
+    source = String(source);
 
-    var targets = this['<targets>'];
+    var sources = this['<sources>'];
     var namespace = this['<namespace>'];
 
-    if (name === '*') {
-      for (name in targets) {
-        if (targets.hasOwnProperty(name)) {
-          targets[name].postMessage(encode(name, message, namespace), origin);
+    if (source === '*') {
+      for (source in sources) {
+        if (sources.hasOwnProperty(source)) {
+          sources[source].postMessage(encode(source, message, namespace), origin);
         }
       }
     } else {
-      if (targets.hasOwnProperty(name)) {
-        targets[name].postMessage(encode(name, message, namespace), origin);
+      if (sources.hasOwnProperty(source)) {
+        sources[source].postMessage(encode(source, message, namespace), origin);
       }
     }
   };
@@ -340,6 +367,11 @@
   }
 
   Master.prototype = {
+    /**
+     * @private
+     * @method <onready>
+     * @param {Function} callback
+     */
     '<onready>': function(callback) {
       var callbacks = this['<callbacks>'];
 
@@ -349,6 +381,13 @@
         callbacks.ready.push(callback);
       }
     },
+
+    /**
+     * @private
+     * @method <proxy>
+     * @param {string} url
+     * @returns {Messenger}
+     */
     '<proxy>': function(url) {
       var iframe = document.createElement('iframe');
 
@@ -363,34 +402,43 @@
       iframe.src = url;
 
       var self = this;
+      var origin = self['<origin>'];
       var callbacks = self['<callbacks>'];
       var messenger = new Messenger('Master', 'CORS');
 
+      // On DOM ready
       domReady(function() {
+        // Append to DOM tree
         document.body.appendChild(iframe);
 
+        // Add source
         messenger.add('Worker', iframe.contentWindow);
 
-        messenger.listen(function(data) {
-          if (data === 'ready') {
-            if (!self['<ready>']) {
-              self['<ready>'] = true;
+        // Add listener
+        messenger.onmessage(function(response) {
+          if (response.origin === origin) {
+            var data = response.data;
 
-              var ready = callbacks.ready;
+            if (data === 'ready') {
+              if (!self['<ready>']) {
+                self['<ready>'] = true;
 
-              for (var i = 0, length = ready.length; i < length; i++) {
-                ready[i]();
+                var ready = callbacks.ready;
+
+                for (var i = 0, length = ready.length; i < length; i++) {
+                  ready[i]();
+                }
+
+                delete callbacks.ready;
               }
+            } else if (typeOf(data) === 'object') {
+              var id = data.uid;
 
-              delete callbacks.ready;
-            }
-          } else if (typeOf(data) === 'object') {
-            var id = data.uid;
+              if (callbacks[id]) {
+                callbacks[id](data);
 
-            if (callbacks[id]) {
-              callbacks[id](data);
-
-              delete callbacks[id];
+                delete callbacks[id];
+              }
             }
           }
         });
@@ -398,6 +446,14 @@
 
       return messenger;
     },
+
+    /**
+     * @public
+     * @method request
+     * @param {string} url
+     * @param {Object} options
+     * @returns {Promise}
+     */
     request: function(url, options) {
       var self = this;
       var origin = self['<origin>'];
