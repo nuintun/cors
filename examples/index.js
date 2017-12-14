@@ -30,6 +30,7 @@
 
   var index = 1;
   var locked = false;
+  var url = '//127.0.0.1:8080/package.json';
   var output = document.getElementById('output');
   var cors = new CORSMaster('//127.0.0.1:8080/examples/api.html');
 
@@ -41,7 +42,6 @@
     locked = true;
 
     var bookmark = 'CORS-' + index++;
-    var url = '//127.0.0.1:8080/package.json?timestamp=' + +new Date();
 
     console.time(bookmark);
 
