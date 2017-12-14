@@ -19,12 +19,33 @@
    * @version 2017/12/07
    */
 
+  /**
+   * @function uid
+   * @returns {string}
+   */
 
 
+  /**
+   * @function typeOf
+   * @param {any} value
+   * @returns {string}
+   */
+
+
+  /**
+   * @function isArray
+   * @param {any} value
+   * @returns {boolean}
+   */
 
 
   var DOMAIN_RE = /^([a-z0-9.+-]+:)?\/\/(?:[^/:]*(?::[^/]*)?@)?([^/]+)/i;
 
+  /**
+   * @function domain
+   * @param {string} url
+   * @returns {string}
+   */
   function domain(url) {
     var matched = DOMAIN_RE.exec(url);
 

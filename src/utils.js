@@ -6,12 +6,21 @@
 
 var UID = 0;
 
+/**
+ * @function uid
+ * @returns {string}
+ */
 export function uid() {
   return 'UID-' + UID++;
 }
 
 var toString = Object.prototype.toString;
 
+/**
+ * @function typeOf
+ * @param {any} value
+ * @returns {string}
+ */
 export function typeOf(value) {
   if (value === null) return 'null';
 
@@ -23,8 +32,26 @@ export function typeOf(value) {
     .toLowerCase();
 }
 
+/**
+ * @function isArray
+ * @param {any} value
+ * @returns {boolean}
+ */
+export var isArray = Array.isArray
+  ? function(value) {
+      return Array.isArray(value);
+    }
+  : function(value) {
+      return typeOf(value) === 'array';
+    };
+
 var DOMAIN_RE = /^([a-z0-9.+-]+:)?\/\/(?:[^/:]*(?::[^/]*)?@)?([^/]+)/i;
 
+/**
+ * @function domain
+ * @param {string} url
+ * @returns {string}
+ */
 export function domain(url) {
   var matched = DOMAIN_RE.exec(url);
 
