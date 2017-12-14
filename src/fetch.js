@@ -46,7 +46,7 @@ export default function fetch(url, options) {
     }
 
     if (options.cache) {
-      url += (QUERY_RE.test(url) ? '&' : '?') + ENQ + '=' + +new Date() + nonce++;
+      url += (QUERY_RE.test(url) ? '&' : '?') + ENQ + '=' + (+new Date() + nonce++);
     }
   }
 
