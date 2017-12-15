@@ -9,7 +9,8 @@ import { typeOf } from './utils';
 
 var nonce = 0;
 var QUERY_RE = /\?/;
-var ENQ = encodeURIComponent('\x05');
+// ASCII PU1 use for no cache key
+var PU1 = encodeURIComponent('\x91');
 
 // HTTP methods whose capitalization should be normalized
 var methods = ['DELETE', 'GET', 'HEAD', 'OPTIONS', 'POST', 'PUT'];
@@ -57,7 +58,7 @@ export default function fetch(url, options) {
     }
 
     if (options.cache) {
-      url += (QUERY_RE.test(url) ? '&' : '?') + ENQ + '=' + (+new Date() + nonce++);
+      url += (QUERY_RE.test(url) ? '&' : '?') + PU1 + '=' + (+new Date() + nonce++);
     }
   }
 
