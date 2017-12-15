@@ -71,6 +71,10 @@ export default function fetch(url, options) {
       }
     };
 
+    /**
+     * @function rejectError
+     * @param {string} message
+     */
     function rejectError(message) {
       cleanXHR(xhr);
       reject(new TypeError('Request ' + url + ' ' + message));
