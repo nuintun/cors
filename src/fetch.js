@@ -28,6 +28,17 @@ function normalizeMethod(method) {
 }
 
 /**
+ * @function cleanXHR
+ * @param {XMLHttpRequest} xhr
+ */
+function cleanXHR(xhr) {
+  xhr.onreadystatechange = null;
+  xhr.onerror = null;
+  xhr.ontimeout = null;
+  xhr.onabort = null;
+}
+
+/**
  * @function fetch
  * @param {string} url
  * @param {Object} options
@@ -55,11 +66,13 @@ export default function fetch(url, options) {
 
     xhr.onreadystatechange = function() {
       if (xhr.readyState === 4) {
+        cleanXHR(xhr);
         resolve(xhr);
       }
     };
 
     function rejectError(message) {
+      cleanXHR(xhr);
       reject(new TypeError('Request ' + url + ' ' + message));
     }
 
