@@ -381,6 +381,8 @@
    */
 
   function Master(url) {
+    url = String(url);
+
     this['<ready>'] = false;
     this['<origin>'] = domain(url);
     this['<callbacks>'] = { ready: [] };

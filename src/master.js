@@ -9,6 +9,8 @@ import Messenger from './messenger/messenger';
 import { uid, domain, typeOf } from './utils';
 
 export default function Master(url) {
+  url = String(url);
+
   this['<ready>'] = false;
   this['<origin>'] = domain(url);
   this['<callbacks>'] = { ready: [] };
