@@ -76,19 +76,21 @@ export default function fetch(url, options) {
      * @param {string} message
      */
     function rejectError(message) {
-      cleanXHR(xhr);
       reject(new TypeError('Request ' + url + ' ' + message));
     }
 
     xhr.ontimeout = function() {
+      cleanXHR(xhr);
       rejectError('timeout');
     };
 
     xhr.onabort = function() {
+      cleanXHR(xhr);
       rejectError('aborted');
     };
 
     xhr.onerror = function() {
+      cleanXHR(xhr);
       rejectError('failed');
     };
 
