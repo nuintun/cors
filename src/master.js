@@ -8,6 +8,11 @@ import domReady from './dom-ready';
 import Messenger from './messenger/messenger';
 import { uid, domain, typeOf } from './utils';
 
+/**
+ * @class Master
+ * @constructor
+ * @param {string} url
+ */
 export default function Master(url) {
   url = String(url);
 

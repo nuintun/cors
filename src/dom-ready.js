@@ -11,6 +11,9 @@ var readyTimer;
 var isBound = false;
 var readyList = [];
 
+/**
+ * @function whenReady
+ */
 function whenReady() {
   // Make sure body exists, at least, in case IE gets a little overzealous.
   // This is taked directly from jQuery's implementation.
@@ -27,12 +30,18 @@ function whenReady() {
   readyList = [];
 }
 
+/**
+ * @function DOMContentLoaded
+ */
 function DOMContentLoaded() {
   document.removeEventListener('DOMContentLoaded', DOMContentLoaded, false);
 
   whenReady();
 }
 
+/**
+ * @function onreadystatechange
+ */
 function onreadystatechange() {
   if (document.readyState === 'complete') {
     document.detachEvent('onreadystatechange', onreadystatechange);
@@ -41,6 +50,9 @@ function onreadystatechange() {
   }
 }
 
+/**
+ * @function doScrollCheck
+ */
 function doScrollCheck() {
   // Stop searching if we have no functions to call
   // (or, in other words, if they have already been called)
@@ -58,6 +70,9 @@ function doScrollCheck() {
   }
 }
 
+/**
+ * @function bindReady
+ */
 function bindReady() {
   // Mozilla, Opera and webkit nightlies currently support this event
   if (supportW3CEvent) {
@@ -84,6 +99,10 @@ function bindReady() {
   }
 }
 
+/**
+ * @function domReady
+ * @param {Function} callback
+ */
 export default function(callback) {
   // Push the given callback onto the list of functions to execute when ready.
   // If the dom has alredy loaded, call 'whenReady' right away.

@@ -35,6 +35,9 @@
   var isBound = false;
   var readyList = [];
 
+  /**
+   * @function whenReady
+   */
   function whenReady() {
     // Make sure body exists, at least, in case IE gets a little overzealous.
     // This is taked directly from jQuery's implementation.
@@ -51,12 +54,18 @@
     readyList = [];
   }
 
+  /**
+   * @function DOMContentLoaded
+   */
   function DOMContentLoaded() {
     document.removeEventListener('DOMContentLoaded', DOMContentLoaded, false);
 
     whenReady();
   }
 
+  /**
+   * @function onreadystatechange
+   */
   function onreadystatechange() {
     if (document.readyState === 'complete') {
       document.detachEvent('onreadystatechange', onreadystatechange);
@@ -65,6 +74,9 @@
     }
   }
 
+  /**
+   * @function doScrollCheck
+   */
   function doScrollCheck() {
     // Stop searching if we have no functions to call
     // (or, in other words, if they have already been called)
@@ -82,6 +94,9 @@
     }
   }
 
+  /**
+   * @function bindReady
+   */
   function bindReady() {
     // Mozilla, Opera and webkit nightlies currently support this event
     if (supportW3CEvent) {
@@ -108,7 +123,11 @@
     }
   }
 
-  var domReady = function(callback) {
+  /**
+   * @function domReady
+   * @param {Function} callback
+   */
+  function domReady(callback) {
     // Push the given callback onto the list of functions to execute when ready.
     // If the dom has alredy loaded, call 'whenReady' right away.
     // Otherwise bind the ready-event if it hasn't been done already
@@ -121,7 +140,7 @@
 
       isBound = true;
     }
-  };
+  }
 
   /**
    * @module utils
@@ -380,6 +399,11 @@
    * @version 2017/12/07
    */
 
+  /**
+   * @class Master
+   * @constructor
+   * @param {string} url
+   */
   function Master(url) {
     url = String(url);
 
