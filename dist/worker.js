@@ -1,11 +1,11 @@
 /**
-* @module cors
-* @author nuintun
-* @license MIT
-* @version 0.0.1
-* @description A pure JavaScript CORS framework.
-* @see https://nuintun.github.io/cors
-*/
+ * @module cors
+ * @author nuintun
+ * @license MIT
+ * @version 0.0.1
+ * @description A pure JavaScript CORS framework.
+ * @see https://nuintun.github.io/cors
+ */
 
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
