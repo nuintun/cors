@@ -6,8 +6,6 @@
 
 import { typeOf, isArray } from './utils';
 
-var BRACKET_RE = /\[\]$/;
-
 /**
  * @function buildParams
  * @param {string} prefix

@@ -4,7 +4,7 @@
  * @license MIT
  * @version 0.0.1
  * @description A pure JavaScript CORS framework.
- * @see https://nuintun.github.io/cors
+ * @see https://nuintun.github.io/cors#readme
  */
 
 (function (global, factory) {
@@ -18,12 +18,6 @@
    * @license MIT
    * @version 2017/12/07
    */
-
-  /**
-   * @function uid
-   * @returns {string}
-   */
-
 
   var toString = Object.prototype.toString;
 
@@ -291,6 +285,7 @@
   var SOH = '\x01';
   var STX = '\x02';
   var ETX = '\x03';
+
   /**
    * @function prefix
    * @param {string} name

@@ -6,14 +6,14 @@
     "name": "nuintun",
     "email": "nuintun@qq.com"
   },
-  "homepage": "https://nuintun.github.io/cors",
+  "homepage": "https://nuintun.github.io/cors#readme",
   "repository": {
     "type": "git",
     "url": "git://github.com/nuintun/cors.git"
   },
   "license": "MIT",
   "devDependencies": {
-    "rollup": "^0.62.0",
-    "uglify-es": "^3.3.4"
+    "rollup": "^0.63.4",
+    "uglify-es": "^3.3.9"
   }
 }

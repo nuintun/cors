@@ -5,7 +5,6 @@
  */
 
 import param from './param';
-import { typeOf } from './utils';
 
 var nonce = 0;
 var QUERY_RE = /\?/;

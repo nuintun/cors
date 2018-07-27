@@ -24,7 +24,6 @@ const banner = `/**
 function build(module) {
   rollup
     .rollup({
-      legacy: true,
       context: 'window',
       input: `src/${module}.js`
     })

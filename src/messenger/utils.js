@@ -7,7 +7,6 @@
 var SOH = '\x01';
 var STX = '\x02';
 var ETX = '\x03';
-var ACK = '\x06';
 
 /**
  * @function prefix
