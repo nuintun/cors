@@ -10,8 +10,8 @@
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
   typeof define === 'function' && define.amd ? define('cors-master', factory) :
-  (global.CORSMaster = factory());
-}(this, (function () { 'use strict';
+  (global = global || self, global.CORSMaster = factory());
+}(this, function () { 'use strict';
 
   /**
    * @module support
@@ -521,4 +521,4 @@
 
   return Master;
 
-})));
+}));

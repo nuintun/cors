@@ -10,8 +10,8 @@
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
   typeof define === 'function' && define.amd ? define('cors-worker', factory) :
-  (global.CORSWorker = factory());
-}(this, (function () { 'use strict';
+  (global = global || self, global.CORSWorker = factory());
+}(this, function () { 'use strict';
 
   /**
    * @module utils
@@ -501,4 +501,4 @@
 
   return Worker;
 
-})));
+}));

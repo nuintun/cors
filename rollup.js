@@ -7,8 +7,8 @@
 'use strict';
 
 const fs = require('fs');
+const terser = require('terser');
 const rollup = require('rollup');
-const uglify = require('uglify-es');
 const pkg = require('./package.json');
 
 const banner = `/**
@@ -21,56 +21,46 @@ const banner = `/**
  */
 `;
 
-function build(module) {
-  rollup
-    .rollup({
-      context: 'window',
-      input: `src/${module}.js`
-    })
-    .then(bundle => {
-      const src = `dist/${module}.js`;
-      const min = `dist/${module}.min.js`;
-      const map = `${module}.js.map`;
+async function build(module) {
+  const bundle = await rollup.rollup({
+    context: 'window',
+    input: `src/${module}.js`
+  });
 
-      bundle
-        .generate({
-          name: `CORS${module.replace(/^[a-z]/, function(letter) {
-            return letter.toUpperCase();
-          })}`,
-          format: 'umd',
-          indent: true,
-          strict: true,
-          banner: banner,
-          amd: { id: `cors-${module}` }
-        })
-        .then(result => {
-          fs.writeFileSync(src, result.code);
-          console.log(`  Build ${src} success!`);
+  const { output } = await bundle.generate({
+    banner,
+    indent: true,
+    strict: true,
+    format: 'umd',
+    amd: { id: `cors-${module}` },
+    name: `CORS${module.replace(/^[a-z]/, function(letter) {
+      return letter.toUpperCase();
+    })}`
+  });
 
-          result = uglify.minify(
-            {
-              [`${module}.js`]: result.code
-            },
-            {
-              ecma: 5,
-              ie8: true,
-              mangle: { eval: true },
-              sourceMap: { url: map }
-            }
-          );
+  const [file] = output;
+  const map = `${module}.js.map`;
+  const src = `dist/${module}.js`;
+  const min = `dist/${module}.min.js`;
 
-          fs.writeFileSync(min, banner + result.code);
-          console.log(`  Build ${min} success!`);
-          fs.writeFileSync(src + '.map', result.map);
-          console.log(`  Build ${src + '.map'} success!`);
-        })
-        .catch(error => {
-          console.error(error);
-        });
-    })
-    .catch(error => {
-      console.error(error);
-    });
+  fs.writeFileSync(src, file.code);
+  console.log(`  Build ${src} success!`);
+
+  const result = terser.minify(
+    {
+      [`${module}.js`]: file.code
+    },
+    {
+      ie8: true,
+      mangle: { eval: true },
+      sourceMap: { url: map }
+    }
+  );
+
+  fs.writeFileSync(min, banner + result.code);
+  console.log(`  Build ${min} success!`);
+  fs.writeFileSync(src + '.map', result.map);
+  console.log(`  Build ${src + '.map'} success!`);
 }
 
 fs.stat('dist', error => {
