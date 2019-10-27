@@ -2,20 +2,20 @@
 # yarn lockfile v1
 
 
-"@types/estree@0.0.39":
+"@types/estree@*":
   version "0.0.39"
   resolved "https://registry.yarnpkg.com/@types/estree/-/estree-0.0.39.tgz#e177e699ee1b8c22d23174caaa7422644389509f"
   integrity sha512-EYNwp3bU+98cpU4lAWYYL7Zz+2gryWH1qbdDTidVd6hkiR6weksdbMadyXKXNPEkQFhXM+hVO9ZygomHXp+AIw==
 
-"@types/node@^11.9.5":
-  version "11.9.5"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-11.9.5.tgz#011eece9d3f839a806b63973e228f85967b79ed3"
-  integrity sha512-vVjM0SVzgaOUpflq4GYBvCpozes8OgIIS5gVXVka+OfK3hvnkC1i93U8WiY2OtNE4XUWyyy/86Kf6e0IHTQw1Q==
+"@types/node@*":
+  version "12.11.7"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-12.11.7.tgz#57682a9771a3f7b09c2497f28129a0462966524a"
+  integrity sha512-JNbGaHFCLwgHn/iCckiGSOZ1XYHsKFwREtzPwSGCVld1SGhOlmZw2D4ZI94HQCrBHbADzW9m4LER/8olJTRGHA==
 
-acorn@^6.1.1:
-  version "6.1.1"
-  resolved "https://registry.yarnpkg.com/acorn/-/acorn-6.1.1.tgz#7d25ae05bb8ad1f9b699108e1094ecd7884adc1f"
-  integrity sha512-jPTiwtOxaHNaAPg/dmrJ/beuzLRnXtB0kQPQ8JpotKJgTB6rX6c8mlf315941pyjBSaPg8NHXS9fhP4u17DpGA==
+acorn@^7.1.0:
+  version "7.1.0"
+  resolved "https://registry.yarnpkg.com/acorn/-/acorn-7.1.0.tgz#949d36f2c292535da602283586c2477c57eb2d6c"
+  integrity sha512-kL5CuoXA/dgxlBbVrflsflzQ3PAas7RYZB52NOm/6839iVYJgKMJ3cQJD+t2i5+qFa8h3MDpEOJiS64E8JLnSQ==
 
 buffer-from@^1.0.0:
   version "1.1.1"
@@ -27,14 +27,14 @@ commander@~2.17.1:
   resolved "https://registry.yarnpkg.com/commander/-/commander-2.17.1.tgz#bd77ab7de6de94205ceacc72f1716d29f20a77bf"
   integrity sha512-wPMUt6FnH2yzG95SA6mzjQOEKUU3aLaDEmzs1ti+1E9h+CsrZghRlqEM/EJ4KscsQVG8uNN4uVreUeT8+drlgg==
 
-rollup@^1.4.0:
-  version "1.4.0"
-  resolved "https://registry.yarnpkg.com/rollup/-/rollup-1.4.0.tgz#fdc965b4ea7948e0b8e1a9051067dce1a61b3a24"
-  integrity sha512-E5HP4rgvAqkXQNYfNHgCDnX5HDHwAPDLUVSNp8iTmT49vY34G0DxEfhjPWnqnFi7v0vQtDGkKl2hvLfmsMvmcA==
+rollup@^1.26.0:
+  version "1.26.0"
+  resolved "https://registry.yarnpkg.com/rollup/-/rollup-1.26.0.tgz#cf40fd5e1edc4d7f3d4235a0a43f1c2be1cf294b"
+  integrity sha512-5HljNYn9icFvXX+Oe97qY5TWvnWhKqgGT0HGeWWqFPx7w7+Anzg7dfHMtUif7YYy6QxAgynDSwK6uxbgcrVUxw==
   dependencies:
-    "@types/estree" "0.0.39"
-    "@types/node" "^11.9.5"
-    acorn "^6.1.1"
+    "@types/estree" "*"
+    "@types/node" "*"
+    acorn "^7.1.0"
 
 source-map-support@~0.5.9:
   version "0.5.10"
